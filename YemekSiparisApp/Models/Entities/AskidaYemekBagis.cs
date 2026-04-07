@@ -13,6 +13,7 @@ namespace YemekSiparisApp.Models.Entities
         [Key]
         public int BagisId { get; set; }
 
+
         /// <summary>
         /// Anonim bağış: null ise kimlik gizlendi
         /// </summary>

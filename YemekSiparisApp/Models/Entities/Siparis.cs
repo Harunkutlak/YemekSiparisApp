@@ -9,6 +9,7 @@ namespace YemekSiparisApp.Models.Entities
     /// </summary>
     public class Siparis
     {
+        //
         [Key]
         public int SiparisId { get; set; }
 
