@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<!-- HERO BÖLÜMÜ -->
+<section class="hero">
+    <div class="hero-title">
+        Van'ın En <span>Lezzetli</span><br />Yemekleri Kapınızda
+    </div>
+    <p class="hero-subtitle">
+        Şehrin en iyi restoranlarından hızlı, güvenli ve kolayca sipariş verin.
+        Dilediğinizde Askıda Yemek ile ihtiyaç sahiplerine destek olun.
+    </p>
+    <form class="hero-search" asp-controller="Restoran" asp-action="Index" method="get">
+        <input type="text" name="arama" placeholder="Restoran veya yemek ara..." autocomplete="off" />
+        <button type="submit" class="btn-primary">🔍 Ara</button>
+    </form>
+</section>
+
+<!-- ASKIDA YEMEK BANNER -->
+<div class="container">
+    <div class="askida-banner">
+        <div class="askida-info">
+            <h2>💛 Askıda Yemek</h2>
+            <p>
+                Bir öğün fazladan bağış yapın, ihtiyaç sahibi komşunuza ulaşsın.
+                Anonim veya açık bağış yapabilir, havuzdan ücretsiz sipariş verebilirsiniz.
+            </p>
+            <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <a asp-controller="AskidaYemek" asp-action="Bagis" class="btn-askida">💚 Bağış Yap</a>
+                <a asp-controller="AskidaYemek" asp-action="Index" class="btn-outline-sm">Havuz Durumu →</a>
+            </div>
+        </div>
+        <div class="askida-stats">
+            <div class="askida-bakiye">₺@ViewBag.HavuzBakiye?.ToString("N2")</div>
+            <div class="askida-bakiye-label">Toplam Havuz Bakiyesi</div>
+        </div>
+    </div>
+</div>
+
+<!-- POPÜLER RESTORANLAR -->
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">🔥 Popüler Restoranlar</h2>
+        <p class="section-sub">En yüksek puanlı restoranlardan sipariş ver</p>
+
+        @if (ViewBag.Restoranlar != null && ((IEnumerable<dynamic>)ViewBag.Restoranlar).Any())
+        {
+            <div class="restoran-grid">
+                @foreach (var r in ViewBag.Restoranlar)
+                {
+                    <a asp-controller="Restoran" asp-action="Detay" asp-route-id="@r.RestoranId">
+                        <div class="card">
+                            <div style="height: 180px; background: linear-gradient(135deg, #1a1a1a, #252525); display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                                🍽️
+                            </div>
+                            <div class="card-body">
+                                <div class="restoran-meta">
+                                    <h3 class="card-title">@r.Ad</h3>
+                                    @if (r.Puan != null)
+                                    {
+                                        <span class="puan-badge">⭐ @r.Puan</span>
+                                    }
+                                </div>
+                                <p class="card-text">@(r.Aciklama ?? "Lezzetli yemekler sizi bekliyor!")</p>
+                                <p class="card-text" style="margin-top: 8px;">🕐 ~@r.TahminiTeslimatDakika dk &nbsp;|&nbsp; Min ₺@r.MinSiparisUcreti</p>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger" style="margin-top: 24px;">
+                Henüz aktif restoran bulunmuyor.
+            </div>
+        }
+
+        <div style="text-align: center; margin-top: 40px;">
+            <a asp-controller="Restoran" asp-action="Index" class="btn-primary">Tüm Restoranları Gör →</a>
+        </div>
+    </div>
+</section>

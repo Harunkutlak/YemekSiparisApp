@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="YemekSiparis - Van'ın En İyi Yemek Sipariş Platformu" />
+    <title>@ViewData["Title"] - YemekSiparis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="nav-brand" asp-controller="Home" asp-action="Index">
+                🍽️ <span>YemekSiparis</span>
+            </a>
+            <div class="nav-links">
+                <a asp-controller="Restoran" asp-action="Index">Restoranlar</a>
+                <a asp-controller="Home" asp-action="Hakkimizda">Hakkımızda</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    if (User.IsInRole("Admin"))
+                    {
+                        <a asp-controller="Admin" asp-action="Index">Yönetim</a>
+                    }
+                    <a asp-controller="Siparis" asp-action="Siparislerim">Siparişlerim</a>
+                    <div class="nav-user">
+                        <span>👤 @User.Identity.Name</span>
+                        <a asp-controller="Hesap" asp-action="Cikis" class="btn-outline-sm">Çıkış</a>
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="Hesap" asp-action="Giris" class="btn-outline-sm">Giriş</a>
+                    <a asp-controller="Hesap" asp-action="Kayit" class="btn-primary-sm">Kayıt Ol</a>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <span class="footer-logo">🍽️ YemekSiparis</span>
+                <p>Van'ın en lezzetli yemeklerini kapınıza getiriyoruz.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Hızlı Bağlantılar</h4>
+                <a asp-controller="Restoran" asp-action="Index">Restoranlar</a>
+                <a asp-controller="Home" asp-action="Hakkimizda">Hakkımızda</a>
+            </div>
+            <div class="footer-askida">
+                <h4>💛 Askıda Yemek</h4>
+                <p>İhtiyaç sahiplerine yemek bağışla, ya da ücretsiz sipariş ver.</p>
+                <a asp-controller="AskidaYemek" asp-action="Index" class="btn-askida">Bağış Yap</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© @DateTime.Now.Year YemekSiparis - Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
