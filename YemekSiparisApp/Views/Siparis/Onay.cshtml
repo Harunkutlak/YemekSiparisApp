@@ -1,0 +1,122 @@
+@model YemekSiparisApp.Models.ViewModels.SiparisOnayViewModel
+@{
+    ViewData["Title"] = "Siparişi Onayla";
+}
+
+<div class="hero" style="padding: 40px 24px; text-align: left; margin-bottom: 40px;">
+    <div class="container">
+        <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 8px;">🚀 Az Kaldı!</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Bilgilerinizi kontrol edip siparişinizi tamamlayın.</p>
+    </div>
+</div>
+
+<div class="container section" style="padding-top: 0;">
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+        
+        <!-- FORM ALANI -->
+        <div>
+            <form asp-action="Onay" method="post" id="onayForm">
+                <div class="card" style="margin-bottom: 24px;">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.03);">
+                        <h3 style="margin:0; font-size: 1.2rem;">📍 Teslimat Bilgileri</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="TeslimatAdresi">Teslimat Adresi</label>
+                            <textarea asp-for="TeslimatAdresi" rows="3" placeholder="Siparişinizin teslim edileceği tam adres..."></textarea>
+                            <span asp-validation-for="TeslimatAdresi" class="validation-message"></span>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label asp-for="SiparisNotu">Sipariş Notu (İsteğe Bağlı)</label>
+                            <input asp-for="SiparisNotu" placeholder="Zili çalmayın, vb." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="border-color: var(--accent);">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(16,185,129,0.1), transparent);">
+                        <h3 style="margin:0; font-size: 1.2rem; color: #6ee7b7; display: flex; align-items: center; gap: 8px;">
+                            💛 Askıda Yemek Desteği
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">
+                            Siparişinizle birlikte ihtiyaç sahiplerine de destek olmak ister misiniz? 
+                            Seçeceğiniz tutar anında @Model.Sepet.AktifRestoranAdi restoranının Askıda Yemek havuzuna aktarılacaktır.
+                        </p>
+                        
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <label style="cursor: pointer;">
+                                <input type="radio" asp-for="AskidaYemekDestegiTutari" value="0" checked /> Desteklemek İstemiyorum
+                            </label><br/>
+                            <label style="cursor: pointer;">
+                                <input type="radio" asp-for="AskidaYemekDestegiTutari" value="50" /> ₺50 Destek (1 Çorba)
+                            </label><br/>
+                            <label style="cursor: pointer;">
+                                <input type="radio" asp-for="AskidaYemekDestegiTutari" value="150" /> ₺150 Destek (1 Porsiyon)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 1.2rem; margin-top: 32px;">
+                    Siparişi Onayla ve Bitir →
+                </button>
+            </form>
+        </div>
+
+        <!-- ÖZET -->
+        <div style="position: sticky; top: 100px; height: fit-content;">
+            <div class="card">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.03);">
+                    <h3 style="margin:0; font-size: 1.2rem;">Sepet Özeti</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                        @foreach(var o in Model.Sepet.Olgeler)
+                        {
+                            <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+                                <span><span style="color: var(--primary); font-weight: 800;">@o.Miktar x</span> @o.UrunAdi</span>
+                                <span style="font-weight: 600;">₺@o.ToplamTutar.ToString("N2")</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 16px; margin-bottom: 12px;"></div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: var(--text-muted);">
+                        <span>Ara Toplam</span>
+                        <span>₺@Model.Sepet.AraToplam.ToString("N2")</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--text-muted);">
+                        <span>Teslimat</span>
+                        <span>₺@Model.Sepet.TeslimatUcreti.ToString("N2")</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-top: 20px; border-top: 1px solid var(--border); font-size: 1.2rem; font-weight: 800;">
+                        <span>Ödenecek Tutar</span>
+                        <span style="color: var(--primary);" id="totalAmount">₺@Model.Sepet.GenelToplam.ToString("N2")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Radiolar değiştikçe ödenecek tutarı anlık güncelleyelim
+        const baseAmount = @Model.Sepet.GenelToplam.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+        const radios = document.querySelectorAll('input[name="AskidaYemekDestegiTutari"]');
+        const totalAmountEl = document.getElementById('totalAmount');
+
+        radios.forEach(r => {
+            r.addEventListener('change', function() {
+                const addAmount = parseFloat(this.value);
+                const total = parseFloat(baseAmount) + addAmount;
+                totalAmountEl.textContent = '₺' + total.toFixed(2);
+            });
+        });
+    </script>
+}

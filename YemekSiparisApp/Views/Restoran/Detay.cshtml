@@ -1,0 +1,113 @@
+@model YemekSiparisApp.Models.Entities.Restoran
+@{
+    ViewData["Title"] = Model.Ad;
+    var kategoriliMenuler = Model.MenuKalemleri
+        .GroupBy(m => m.Kategori)
+        .OrderBy(g => g.Key.Ad)
+        .ToList();
+}
+
+<div class="hero" style="padding: 60px 24px; text-align: left;">
+    <div class="container">
+        <div style="display: flex; gap: 32px; align-items: center;">
+            <div style="width: 140px; height: 140px; background: rgba(255,255,255,0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 4rem; flex-shrink: 0;">
+                🍽️
+            </div>
+            <div>
+                <h1 style="font-size: 2.8rem; font-weight: 800; margin-bottom: 8px;">@Model.Ad</h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 16px; max-width: 600px;">
+                    @(Model.Aciklama ?? "Bu restoranın harika lezzetlerini hemen keşfet!")
+                </p>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    @if(Model.Puan != null)
+                    {
+                        <span class="puan-badge" style="font-size: 0.9rem; padding: 6px 14px;">⭐ @Model.Puan / 5.0</span>
+                    }
+                    <span style="background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 20px; font-size: 0.9rem;">
+                        ⏱️ ~@Model.TahminiTeslimatDakika Dakika
+                    </span>
+                    <span style="background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 20px; font-size: 0.9rem;">
+                        💰 Min. ₺@Model.MinSiparisUcreti
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container section">
+    
+    @if(TempData["Mesaj"] != null)
+    {
+        <div class="alert alert-success">
+            ✅ @TempData["Mesaj"]
+        </div>
+    }
+
+    <div style="display: grid; grid-template-columns: 1fr 340px; gap: 32px;">
+        
+        <!-- MENÜ ALANI -->
+        <div>
+            @if (!kategoriliMenuler.Any())
+            {
+                <div class="alert alert-danger">Bu restorana ait aktif menü bulunmamaktadır.</div>
+            }
+
+            @foreach (var kategori in kategoriliMenuler)
+            {
+                <div style="margin-bottom: 40px;">
+                    <h3 style="font-size: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 20px;">
+                        @kategori.Key.Ad
+                    </h3>
+                    
+                    <div style="display: grid; gap: 16px;">
+                        @foreach(var urun in kategori)
+                        {
+                            <div class="card" style="display: flex; flex-direction: row; padding: 16px;">
+                                <div style="flex: 1;">
+                                    <h4 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 4px;">
+                                        @urun.Ad 
+                                        @if(urun.IsVejetaryen) { <span style="font-size: 0.8rem; background: #064e3b; color: #6ee7b7; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">🌱 Vejetaryen</span> }
+                                    </h4>
+                                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px; max-width: 400px;">
+                                        @(urun.Aciklama ?? "")
+                                    </p>
+                                    <div style="font-weight: 800; color: var(--primary); font-size: 1.1rem;">
+                                        ₺@urun.Fiyat.ToString("N2")
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; padding-left: 20px;">
+                                    <form asp-controller="Sepet" asp-action="Ekle" method="post">
+                                        <input type="hidden" name="menuKalemiId" value="@urun.MenuKalemiId" />
+                                        <button type="submit" class="btn-primary-sm" style="border-radius: 50px; padding: 10px 20px;">
+                                            + Ekle
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- SEPET ÖZETİ (YANDAN) -->
+        <div style="position: sticky; top: 100px; height: fit-content;">
+            <div class="card">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.03);">
+                    <h3 style="margin:0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                        🛒 Sepetiniz
+                    </h3>
+                </div>
+                <div class="card-body" style="padding: 20px; text-align: center;">
+                    <!-- Şu an SepetComponent yok, o yüzden sadece buton koyuyoruz -->
+                    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">
+                        Sepetinizdeki ürünleri görmek ve siparişi tamamlamak için sepete gidin.
+                    </p>
+                    <a asp-controller="Sepet" asp-action="Index" class="btn-primary" style="width: 100%;">Sepete Git →</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

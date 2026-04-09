@@ -1,0 +1,67 @@
+@model YemekSiparisApp.Models.ViewModels.KayitViewModel
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<div class="container">
+    <div class="form-container" style="max-width: 600px;">
+        <h2 class="form-title">📝 Yeni Hesap Oluştur</h2>
+        <p class="form-subtitle">En lezzetli yemeklere ulaşmak için platformumuza katılın.</p>
+
+        <form asp-controller="Hesap" asp-action="Kayit" method="post">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label asp-for="Ad">Ad</label>
+                    <input asp-for="Ad" placeholder="Adınız" />
+                    <span asp-validation-for="Ad" class="validation-message"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Soyad">Soyad</label>
+                    <input asp-for="Soyad" placeholder="Soyadınız" />
+                    <span asp-validation-for="Soyad" class="validation-message"></span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label asp-for="Email">E-posta Adresi</label>
+                    <input asp-for="Email" placeholder="ornek@mail.com" />
+                    <span asp-validation-for="Email" class="validation-message"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Telefon">Telefon Numarası</label>
+                    <input asp-for="Telefon" placeholder="0555 555 55 55" />
+                    <span asp-validation-for="Telefon" class="validation-message"></span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label asp-for="Sifre">Şifre</label>
+                    <input asp-for="Sifre" type="password" placeholder="En az 6 karakter" />
+                    <span asp-validation-for="Sifre" class="validation-message"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="SifreTekrar">Şifre Tekrar</label>
+                    <input asp-for="SifreTekrar" type="password" placeholder="Şifrenizi doğrulayın" />
+                    <span asp-validation-for="SifreTekrar" class="validation-message"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Adres">Varsayılan Teslimat Adresi (İsteğe Bağlı)</label>
+                <textarea asp-for="Adres" rows="3" placeholder="Açık adresinizi buraya yazabilirsiniz..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary form-submit">Kayıt Ol</button>
+        </form>
+
+        <p style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
+            Zaten hesabınız var mı? <a asp-controller="Hesap" asp-action="Giris" style="color: var(--primary); font-weight: 600;">Giriş Yapın</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,47 @@
+@model YemekSiparisApp.Models.ViewModels.GirisViewModel
+@{
+    ViewData["Title"] = "Giriş Yap";
+}
+
+<div class="container">
+    <div class="form-container">
+        <h2 class="form-title">👋 Tekrar Hoş Geldiniz</h2>
+        <p class="form-subtitle">Sipariş vermek ve Askıda Yemek havuzuna destek olmak için giriş yapın.</p>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                Lütfen giriş bilgilerinizi kontrol ediniz.
+            </div>
+        }
+
+        <form asp-controller="Hesap" asp-action="Giris" method="post">
+            <div class="form-group">
+                <label asp-for="Email">E-posta Adresi</label>
+                <input asp-for="Email" placeholder="ornek@mail.com" />
+                <span asp-validation-for="Email" class="validation-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Sifre">Şifre</label>
+                <input asp-for="Sifre" type="password" placeholder="••••••••" />
+                <span asp-validation-for="Sifre" class="validation-message"></span>
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                <input asp-for="BeniHatirla" type="checkbox" style="width: auto;" />
+                <label asp-for="BeniHatirla" style="margin: 0; font-weight: normal; cursor: pointer;">Beni Hatırla</label>
+            </div>
+
+            <button type="submit" class="btn-primary form-submit">Giriş Yap</button>
+        </form>
+
+        <p style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
+            Hesabınız yok mu? <a asp-controller="Hesap" asp-action="Kayit" style="color: var(--primary); font-weight: 600;">Hemen Kayıt Olun</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

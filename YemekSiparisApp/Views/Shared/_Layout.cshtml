@@ -21,13 +21,14 @@
             <div class="nav-links">
                 <a asp-controller="Restoran" asp-action="Index">Restoranlar</a>
                 <a asp-controller="Home" asp-action="Hakkimizda">Hakkımızda</a>
+                <a asp-controller="Sepet" asp-action="Index">🛒 Sepetim</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     if (User.IsInRole("Admin"))
                     {
                         <a asp-controller="Admin" asp-action="Index">Yönetim</a>
                     }
-                    <a asp-controller="Siparis" asp-action="Siparislerim">Siparişlerim</a>
+                    <a asp-controller="Siparis" asp-action="Gecmis">Siparişlerim</a>
                     <div class="nav-user">
                         <span>👤 @User.Identity.Name</span>
                         <a asp-controller="Hesap" asp-action="Cikis" class="btn-outline-sm">Çıkış</a>

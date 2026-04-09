@@ -1,0 +1,70 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.Siparis>
+@{
+    ViewData["Title"] = "Geçmiş Siparişlerim";
+}
+
+<div class="container section">
+    
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px;">
+        <div>
+            <h2 class="section-title">📦 Siparişlerim</h2>
+            <p class="section-sub">Geçmişteki ve mevcut siparişleriniz</p>
+        </div>
+        <a asp-controller="Restoran" asp-action="Index" class="btn-primary-sm">Yeni Sipariş Ver</a>
+    </div>
+
+    @if(!Model.Any()) {
+        <div class="alert alert-danger" style="text-align: center; padding: 40px;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🔍</div>
+            <h4>Görünüşe göre henüz hiç sipariş vermediniz.</h4>
+            <p>Van'ın eşsiz lezzetlerini keşfetmek için ilk siparişinizi hemen oluşturun!</p>
+        </div>
+    } else {
+        <div style="display: grid; gap: 20px;">
+            @foreach(var siparis in Model) {
+                var durumRenk = siparis.Durum switch {
+                    "Beklemede" => "var(--text-muted)",
+                    "Onaylandi" => "var(--text-primary)",
+                    "Hazirlaniyor" => "var(--secondary)",
+                    "YoldaKurye" => "#3b82f6",
+                    "TeslimEdildi" => "var(--accent)",
+                    "Iptal" => "#ef4444",
+                    _ => "var(--text-muted)"
+                };
+
+                <div class="card">
+                    <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);">
+                        <div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 4px;">@siparis.Restoran.Ad</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">@siparis.OlusturulmaTarihi.ToString("dd MMM yyyy, HH:mm")</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 800; color: var(--primary); font-size: 1.2rem;">₺@siparis.ToplamTutar.ToString("N2")</div>
+                            <div style="color: @durumRenk; font-size: 0.85rem; font-weight: bold;">@siparis.Durum</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px;">Sipariş İçeriği:</p>
+                            <ul style="list-style: none; padding: 0; font-size: 0.95rem;">
+                                @foreach(var detay in siparis.SiparisDetaylari) {
+                                    <li><span style="color: var(--primary); font-weight: bold;">@detay.Miktar x</span> @(detay.MenuKalemi?.Ad ?? "Ürün")</li>
+                                }
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            @if(siparis.Durum != "TeslimEdildi" && siparis.Durum != "Iptal") {
+                                <a asp-action="Takip" asp-route-id="@siparis.SiparisId" class="btn-primary-sm">Canlı Takip Et</a>
+                            } else {
+                                <a asp-action="Takip" asp-route-id="@siparis.SiparisId" class="btn-outline-sm">Detayları Gör</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+</div>

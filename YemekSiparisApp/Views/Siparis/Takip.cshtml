@@ -1,0 +1,110 @@
+@model YemekSiparisApp.Models.Entities.Siparis
+@{
+    ViewData["Title"] = "Sipariş Takibi";
+}
+
+<div class="container section">
+    
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 8px;">Sipariş Durumu</h2>
+        <p style="color: var(--text-muted);">Siparişiniz için #@Model.SiparisId takip ekranı</p>
+    </div>
+
+    <div class="card" style="max-width: 800px; margin: 0 auto;">
+        
+        <div style="padding: 30px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border);">
+            <div>
+                <h3 style="margin-bottom: 8px;">@Model.Restoran.Ad</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 300px;">
+                    @Model.TeslimatAdresi
+                </p>
+            </div>
+            <div style="text-align: right;">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 4px;">Toplam Tutar</p>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">₺@Model.ToplamTutar.ToString("N2")</div>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 40px 30px;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; position: relative; margin-bottom: 40px;">
+                <!-- Arka plan çizgisi -->
+                <div style="position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: var(--border); z-index: 1; transform: translateY(-50%);"></div>
+                
+                @{
+                    var asama = Model.Durum switch {
+                        "Beklemede" => 1,
+                        "Onaylandi" => 2,
+                        "Hazirlaniyor" => 3,
+                        "YoldaKurye" => 4,
+                        "TeslimEdildi" => 5,
+                        _ => 0
+                    };
+                    
+                    var progressBarWidth = asama > 0 ? (asama - 1) * 25 : 0;
+                }
+
+                @if(Model.Durum == "Iptal") {
+                    <div class="alert alert-danger" style="width: 100%; text-align: center; z-index: 2;">
+                        Siparişiniz İptal Edildi.
+                    </div>
+                } else {
+                    <!-- İlerleme çizgisi -->
+                    <div style="position: absolute; top: 50%; left: 0; width: @progressBarWidth%; height: 4px; background: var(--primary); z-index: 1; transform: translateY(-50%); transition: width 0.5s ease;"></div>
+
+                    <div style="z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 12px; transform: translateY(-20px);">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; background: @(asama >= 1 ? "var(--primary)" : "var(--bg-card2)"); color: @(asama >= 1 ? "#fff" : "var(--text-muted)"); border: 2px solid @(asama >= 1 ? "var(--primary)" : "var(--border)");">
+                            1
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: @(asama >= 1 ? "bold" : "normal"); color: @(asama >= 1 ? "var(--text-primary)" : "var(--text-muted)");">Bekliyor</span>
+                    </div>
+
+                    <div style="z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 12px; transform: translateY(-20px);">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; background: @(asama >= 2 ? "var(--primary)" : "var(--bg-card2)"); color: @(asama >= 2 ? "#fff" : "var(--text-muted)"); border: 2px solid @(asama >= 2 ? "var(--primary)" : "var(--border)");">
+                            2
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: @(asama >= 2 ? "bold" : "normal"); color: @(asama >= 2 ? "var(--text-primary)" : "var(--text-muted)");">Onaylandı</span>
+                    </div>
+
+                    <div style="z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 12px; transform: translateY(-20px);">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; background: @(asama >= 3 ? "var(--primary)" : "var(--bg-card2)"); color: @(asama >= 3 ? "#fff" : "var(--text-muted)"); border: 2px solid @(asama >= 3 ? "var(--primary)" : "var(--border)");">
+                            3
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: @(asama >= 3 ? "bold" : "normal"); color: @(asama >= 3 ? "var(--text-primary)" : "var(--text-muted)");">Hazırlanıyor</span>
+                    </div>
+
+                    <div style="z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 12px; transform: translateY(-20px);">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; background: @(asama >= 4 ? "var(--primary)" : "var(--bg-card2)"); color: @(asama >= 4 ? "#fff" : "var(--text-muted)"); border: 2px solid @(asama >= 4 ? "var(--primary)" : "var(--border)");">
+                            4
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: @(asama >= 4 ? "bold" : "normal"); color: @(asama >= 4 ? "var(--text-primary)" : "var(--text-muted)");">Yolda</span>
+                    </div>
+
+                    <div style="z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 12px; transform: translateY(-20px);">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; background: @(asama >= 5 ? "var(--accent)" : "var(--bg-card2)"); color: @(asama >= 5 ? "#fff" : "var(--text-muted)"); border: 2px solid @(asama >= 5 ? "var(--accent)" : "var(--border)");">
+                            5
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: @(asama >= 5 ? "bold" : "normal"); color: @(asama >= 5 ? "var(--text-primary)" : "var(--text-muted)");">Teslim Edildi</span>
+                    </div>
+                }
+            </div>
+
+            @if(Model.KuryeId != null) {
+                <div style="margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: var(--radius); display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 50px; height: 50px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🛵</div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 4px;">Kuryeniz</p>
+                        <p style="font-weight: bold;">@Model.Kurye.Kullanici.Ad @Model.Kurye.Kullanici.Soyad</p>
+                        <p style="font-size: 0.85rem;">Plaka: @Model.Kurye.Plaka</p>
+                    </div>
+                </div>
+            }
+
+            <div style="margin-top: 40px; text-align: center;">
+                <a asp-action="Gecmis" class="btn-outline-sm">Siparişlerime Dön</a>
+                <button onclick="window.location.reload()" class="btn-primary-sm" style="margin-left: 12px;">🔄 Durumu Yenile</button>
+            </div>
+            
+        </div>
+    </div>
+</div>

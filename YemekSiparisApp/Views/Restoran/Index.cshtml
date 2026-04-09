@@ -1,0 +1,61 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.Restoran>
+@{
+    ViewData["Title"] = "Restoranlar";
+}
+
+<div class="container section">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+        <div>
+            <h2 class="section-title">🍔 Tüm Restoranlar</h2>
+            <p class="section-sub">Van'ın en iyi lezzet durakları</p>
+        </div>
+        
+        <form asp-action="Index" method="get" style="display: flex; gap: 12px;">
+            <input type="text" name="arama" value="@Context.Request.Query["arama"]" placeholder="Restoran ara..." style="padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none;" />
+            <button type="submit" class="btn-primary-sm">Filtrele</button>
+            @if (!string.IsNullOrEmpty(Context.Request.Query["arama"]))
+            {
+                <a asp-action="Index" class="btn-outline-sm" style="display: flex; align-items: center;">Temizle</a>
+            }
+        </form>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-danger" style="text-align: center; padding: 40px;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🔍</div>
+            <h4>Kriterlerinize uygun restoran bulunamadı.</h4>
+            <p>Lütfen farklı bir arama terimi deneyin.</p>
+        </div>
+    }
+    else
+    {
+        <div class="restoran-grid">
+            @foreach (var r in Model)
+            {
+                <a asp-action="Detay" asp-route-id="@r.RestoranId">
+                    <div class="card">
+                        <div style="height: 180px; background: linear-gradient(135deg, #1a1a1a, #252525); display: flex; align-items: center; justify-content: center; font-size: 3.5rem;">
+                            🍽️
+                        </div>
+                        <div class="card-body">
+                            <div class="restoran-meta">
+                                <h3 class="card-title">@r.Ad</h3>
+                                @if (r.Puan != null)
+                                {
+                                    <span class="puan-badge">⭐ @r.Puan</span>
+                                }
+                            </div>
+                            <p class="card-text" style="margin-bottom: 12px;">@(string.IsNullOrEmpty(r.Aciklama) ? "Lezzetli menüler" : r.Aciklama)</p>
+                            
+                            <div style="display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 12px;">
+                                <span><i class="fa fa-motorcycle"></i> Min: ₺@r.MinSiparisUcreti</span>
+                                <span><i class="fa fa-clock"></i> ~@r.TahminiTeslimatDakika dk</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>

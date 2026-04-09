@@ -1,0 +1,87 @@
+@model YemekSiparisApp.Models.ViewModels.SepetViewModel
+@{
+    ViewData["Title"] = "Sepetim";
+}
+
+<div class="container section">
+    <h2 class="section-title">🛒 Sepetiniz</h2>
+
+    @if (!Model.Olgeler.Any())
+    {
+        <div class="alert alert-danger" style="text-align: center; padding: 40px; margin-top: 24px;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🛍️</div>
+            <h4>Sepetiniz şu an boş</h4>
+            <p style="margin-bottom: 24px;">Lezzetli yemekler eklemek için hemen restoranlara göz atın.</p>
+            <a asp-controller="Restoran" asp-action="Index" class="btn-primary">Kataloğa Git</a>
+        </div>
+    }
+    else
+    {
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; margin-top: 24px;">
+            <!-- Sepet Öğeleri -->
+            <div>
+                <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1.2rem;">@Model.AktifRestoranAdi <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: normal;">restoranından</span></h3>
+                    <a asp-controller="Sepet" asp-action="Bosalt" class="btn-outline-sm" style="color: #ef4444 !important; border-color: rgba(239,68,68,0.5);">Sepeti Boşalt</a>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div style="display: flex; flex-direction: column; gap: 1px; background: var(--border);">
+                        @foreach (var oge in Model.Olgeler)
+                        {
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: var(--bg-card);">
+                                <div style="flex: 1;">
+                                    <h4 style="font-size: 1.1rem; margin-bottom: 4px;">@oge.UrunAdi</h4>
+                                    <div style="color: var(--primary); font-weight: 600;">₺@oge.BirimFiyat.ToString("N2")</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div style="display: flex; align-items: center; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+                                        <form asp-controller="Sepet" asp-action="Kaldir" method="post" style="margin: 0;">
+                                            <input type="hidden" name="menuKalemiId" value="@oge.MenuKalemiId" />
+                                            <button type="submit" style="background: var(--bg-card2); color: var(--text-primary); border: none; padding: 8px 12px; cursor: pointer;">-</button>
+                                        </form>
+                                        <span style="padding: 0 12px; font-weight: 600;">@oge.Miktar</span>
+                                        <form asp-controller="Sepet" asp-action="Ekle" method="post" style="margin: 0;">
+                                            <input type="hidden" name="menuKalemiId" value="@oge.MenuKalemiId" />
+                                            <button type="submit" style="background: var(--bg-card2); color: var(--text-primary); border: none; padding: 8px 12px; cursor: pointer;">+</button>
+                                        </form>
+                                    </div>
+                                    <div style="width: 80px; text-align: right; font-weight: 800; font-size: 1.1rem;">
+                                        ₺@oge.ToplamTutar.ToString("N2")
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Özet ve Onay -->
+            <div style="position: sticky; top: 100px; height: fit-content;">
+                <div class="card">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.03);">
+                        <h3 style="margin:0; font-size: 1.2rem;">Sipariş Özeti</h3>
+                    </div>
+                    <div class="card-body" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: var(--text-muted);">
+                            <span>Ara Toplam</span>
+                            <span>₺@Model.AraToplam.ToString("N2")</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--text-muted);">
+                            <span>Teslimat Ücreti</span>
+                            <span>₺@Model.TeslimatUcreti.ToString("N2")</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-top: 20px; border-top: 1px solid var(--border); margin-bottom: 24px; font-size: 1.2rem; font-weight: 800;">
+                            <span>Genel Toplam</span>
+                            <span style="color: var(--primary);">₺@Model.GenelToplam.ToString("N2")</span>
+                        </div>
+
+                        <a asp-controller="Siparis" asp-action="Onay" class="btn-primary" style="width: 100%; text-align: center; padding: 14px; font-size: 1.1rem;">
+                            Siparişi Tamamla →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
