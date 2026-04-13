@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Yönetim Paneli</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        body { margin: 0; background: var(--bg-dark); }
+        .admin-layout { display: flex; height: 100vh; overflow: hidden; }
+        .admin-sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .admin-brand {
+            padding: 24px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            text-decoration: none;
+        }
+        .admin-user { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+        .admin-user-name { font-weight: 600; font-size: 0.95rem; }
+        .admin-user-role { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        .admin-menu { flex: 1; padding: 16px 0; }
+        .admin-menu-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 24px; color: var(--text-primary);
+            text-decoration: none; font-size: 0.95rem; font-weight: 500;
+            transition: var(--transition);
+        }
+        .admin-menu-item:hover, .admin-menu-item.active {
+            background: rgba(255,90,31,0.1); color: var(--primary);
+        }
+        .admin-content {
+            flex: 1; display: flex; flex-direction: column; overflow-y: auto;
+        }
+        .admin-header {
+            height: 64px; background: rgba(26,26,26,0.8); backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 32px; position: sticky; top: 0; z-index: 10;
+        }
+        .admin-main { padding: 32px; }
+        
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; display: flex; gap: 16px;
+        }
+        .stat-icon {
+            width: 50px; height: 50px; border-radius: 12px;
+            background: rgba(255,90,31,0.1); color: var(--primary);
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+        }
+        .stat-info h4 { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+        .stat-info .value { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); }
+        
+        .action-table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+        .action-table th { text-align: left; padding: 16px; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+        .action-table td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        .action-table tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+        .badge-success { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+        .badge-warning { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+        .badge-danger { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+        .badge-info { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- SIDEBAR -->
+        <div class="admin-sidebar">
+            <a asp-controller="Home" asp-action="Index" class="admin-brand">
+                🍽️ YemekSiparis
+            </a>
+            
+            <div class="admin-user">
+                <div class="admin-user-name">@User.Identity?.Name</div>
+                <div class="admin-user-role">
+                    @if(User.IsInRole("Admin")) { <span>Sistem Yöneticisi</span> }
+                    else if(User.IsInRole("RestoranSahibi")) { <span>Restoran Paneli</span> }
+                </div>
+            </div>
+
+            <div class="admin-menu">
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Admin" asp-action="Index" class="admin-menu-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                        <i class="fa fa-chart-line" style="width:20px;"></i> Dashboard
+                    </a>
+                    <a asp-controller="Admin" asp-action="Restoranlar" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Restoranlar" ? "active" : "")">
+                        <i class="fa fa-store" style="width:20px;"></i> Restoranlar
+                    </a>
+                    <a asp-controller="Admin" asp-action="Kullanicilar" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Kullanicilar" ? "active" : "")">
+                        <i class="fa fa-users" style="width:20px;"></i> Kullanıcılar
+                    </a>
+                    <a asp-controller="Admin" asp-action="AskidaYemek" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "AskidaYemek" ? "active" : "")">
+                        <i class="fa fa-heart" style="width:20px; color: var(--accent);"></i> Askıda Yemek
+                    </a>
+                }
+                else if (User.IsInRole("RestoranSahibi"))
+                {
+                    <a asp-controller="RestoranPanel" asp-action="Index" class="admin-menu-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "RestoranPanel" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                        <i class="fa fa-home" style="width:20px;"></i> Restoran Özeti
+                    </a>
+                    <a asp-controller="RestoranPanel" asp-action="Siparisler" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Siparisler" ? "active" : "")">
+                        <i class="fa fa-clipboard-list" style="width:20px;"></i> Sipariş Yönetimi
+                    </a>
+                    <a asp-controller="RestoranPanel" asp-action="Menu" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Menu" ? "active" : "")">
+                        <i class="fa fa-pizza-slice" style="width:20px;"></i> Menüm
+                    </a>
+                }
+                
+                <hr style="border:0; border-top: 1px solid var(--border); margin: 16px 0;" />
+                
+                <a asp-controller="Home" asp-action="Index" class="admin-menu-item" style="color: var(--text-muted);">
+                    <i class="fa fa-arrow-left" style="width:20px;"></i> Siteye Dön
+                </a>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="admin-content">
+            <div class="admin-header">
+                <h2 style="font-size: 1.2rem; margin:0;">@ViewData["Title"]</h2>
+                <div style="display: flex; gap: 16px;">
+                    <a asp-controller="Hesap" asp-action="Cikis" class="btn-outline-sm" style="border-color: #ef4444; color: #ef4444 !important;">Güvenli Çıkış</a>
+                </div>
+            </div>
+
+            <div class="admin-main">
+                @if (TempData["Mesaj"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Mesaj"]</div>
+                }
+                @if (TempData["Hata"] != null)
+                {
+                    <div class="alert alert-danger">@TempData["Hata"]</div>
+                }
+
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

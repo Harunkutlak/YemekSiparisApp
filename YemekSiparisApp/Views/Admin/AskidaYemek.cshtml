@@ -1,0 +1,50 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.AskidaYemekHavuzu>
+@{
+    ViewData["Title"] = "Askıda Yemek Havuzları";
+}
+
+<div class="card">
+    <div class="card-body">
+        <p style="color: var(--text-muted); margin-bottom: 24px;">Sistemde bulunan genel veya restorana özel tüm "Askıda Yemek" havuzlarının güncel bakiye takibini bu sayfadan görebilirsiniz.</p>
+
+        <table class="action-table">
+            <thead>
+                <tr>
+                    <th>Havuz Tipi</th>
+                    <th>Restoran Adı</th>
+                    <th>Toplam Bakiye</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted);">Sistemde kayıtlı Askıda Yemek havuzu bulunamadı.</td>
+                    </tr>
+                }
+                
+                @foreach(var h in Model)
+                {
+                    <tr>
+                        <td>
+                            @if(h.RestoranId == null) {
+                                <span class="badge badge-info">Genel Havuz</span>
+                            } else {
+                                <span class="badge badge-warning">Özel Havuz</span>
+                            }
+                        </td>
+                        <td style="font-weight: 600;">
+                            @(h.RestoranId == null ? "Sistem Geneli" : (h.Restoran?.Ad ?? "Bilinmiyor"))
+                        </td>
+                        <td style="font-weight: 800; color: var(--accent);">₺@h.ToplamBakiye.ToString("N2")</td>
+                        <td>
+                            @if(h.IsActive) { <span class="badge badge-success">Aktif</span> }
+                            else { <span class="badge badge-danger">Kapalı</span> }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

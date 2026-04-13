@@ -1,0 +1,67 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.Kullanici>
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+}
+
+<div class="card">
+    <div class="card-body">
+        <p style="color: var(--text-muted); margin-bottom: 24px;">Sistemdeki kullanıcıların yetkilerini (Rol) ve Askıda Yemek sistemine katılım durumlarını düzenleyebilirsiniz.</p>
+        
+        <table class="action-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ad Soyad</th>
+                    <th>E-Posta</th>
+                    <th>Kayıt Tarihi</th>
+                    <th>Mevcut Rol</th>
+                    <th>İhtiyaç Sahibi</th>
+                    <th>Aksiyon</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var k in Model)
+                {
+                    <tr>
+                        <form asp-action="KullaniciGuncelle" method="post" style="margin: 0; display: contents;">
+                            <input type="hidden" name="id" value="@k.KullaniciId" />
+                            
+                            <td>#@k.KullaniciId</td>
+                            <td style="font-weight: 600;">@k.Ad @k.Soyad</td>
+                            <td>@k.Email</td>
+                            <td>@k.OlusturulmaTarihi.ToString("dd.MM.yyyy")</td>
+                            
+                            <td>
+                                @if (k.KullaniciId == 1) // Admin hesabı koruması
+                                {
+                                    <span class="badge badge-warning">Admin</span>
+                                    <input type="hidden" name="rol" value="Admin" />
+                                }
+                                else
+                                {
+                                    <select name="rol" style="background: var(--bg-card2); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; padding: 4px; outline: none;">
+                                        <option value="Musteri" selected="@(k.Rol == "Musteri")">Müşteri</option>
+                                        <option value="RestoranSahibi" selected="@(k.Rol == "RestoranSahibi")">Restoran Sahibi</option>
+                                        <option value="Admin" selected="@(k.Rol == "Admin")">Admin</option>
+                                        <option value="Kurye" selected="@(k.Rol == "Kurye")">Kurye</option>
+                                    </select>
+                                }
+                            </td>
+                            
+                            <td style="text-align: center;">
+                                <input type="checkbox" name="isIhtiyacSahibi" value="true" @(k.IsIhtiyacSahibi ? "checked" : "") style="cursor: pointer;" />
+                            </td>
+                            
+                            <td>
+                                @if (k.KullaniciId != 1)
+                                {
+                                    <button type="submit" class="btn-primary-sm" style="padding: 6px 12px;">Güncelle</button>
+                                }
+                            </td>
+                        </form>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

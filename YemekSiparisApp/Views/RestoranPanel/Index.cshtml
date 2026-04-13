@@ -1,0 +1,43 @@
+@{
+    ViewData["Title"] = "Restoran Özeti: " + ViewBag.RestoranAdi;
+}
+
+@if (!ViewBag.IsActive)
+{
+    <div class="alert alert-danger" style="margin-bottom: 24px;">
+        ⚠️ <strong>Restoranınız şu anda sistemde inaktif durumda.</strong> 
+        Müşteriler restoranınızı göremez ve sipariş veremez. Yeniden aktifleştirmek için Admin ile görüşün.
+    </div>
+}
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16,185,129,0.15); color: #10b981;"><i class="fa fa-wallet"></i></div>
+        <div class="stat-info">
+            <h4>Bugünkü Ciro</h4>
+            <div class="value">₺@ViewBag.BugunkuCiro?.ToString("N2")</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(59,130,246,0.15); color: #3b82f6;"><i class="fa fa-clock"></i></div>
+        <div class="stat-info">
+            <h4>Bekleyen / Onaylanan</h4>
+            <div class="value">@ViewBag.BekleyenSiparisSayisi Sipariş</div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card" style="margin-top: 40px;">
+    <div class="card-body" style="padding: 30px; text-align: center;">
+        <h3 style="margin-bottom: 16px;">Kolay Erişim</h3>
+        <p style="color: var(--text-muted); margin-bottom: 24px;">Buradan hızlıca restoranınızın aktif durumuyla ilgili işlemleri yürütebilirsiniz.</p>
+        
+        <div style="display: flex; gap: 16px; justify-content: center;">
+            <a asp-action="Siparisler" class="btn-primary">Gelen Siparişleri Gör</a>
+            <a asp-action="Menu" class="btn-outline-sm">Menüyü Yönet</a>
+        </div>
+    </div>
+</div>
