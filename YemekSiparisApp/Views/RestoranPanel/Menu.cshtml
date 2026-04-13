@@ -1,0 +1,90 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.MenuKalemi>
+@{
+    ViewData["Title"] = "Menü Yönetimi";
+    var kategoriler = ViewBag.Kategoriler as IEnumerable<YemekSiparisApp.Models.Entities.Kategori>;
+}
+
+<div class="card" style="margin-bottom: 32px;">
+    <div class="card-body">
+        <h3 style="margin-bottom: 16px;">Menüye Yeni Ürün Ekle</h3>
+        @if(kategoriler != null && kategoriler.Any()) {
+            <form asp-action="MenuEkle" method="post" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 16px; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Ürün Adı</label>
+                    <input type="text" name="Ad" required />
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Kategori</label>
+                    <select name="KategoriId" required>
+                        @foreach(var k in kategoriler) {
+                            <option value="@k.KategoriId">@k.Ad</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Fiyat (₺)</label>
+                    <input type="number" name="Fiyat" value="50" step="0.01" required />
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; align-self: center; margin-bottom: 8px;">
+                    <label style="display:flex; align-items:center; gap:4px; margin:0; cursor:pointer;">
+                        <input type="checkbox" name="IsVejetaryen" value="true" /> Vejetaryen
+                    </label>
+                    <label style="display:flex; align-items:center; gap:4px; margin:0; cursor:pointer;">
+                        <input type="checkbox" name="IsAkti" value="true" checked /> Satışta
+                    </label>
+                </div>
+                <button type="submit" class="btn-primary" style="padding: 12px 24px;">➕ Ürün Ekle</button>
+            </form>
+        } else {
+            <div class="alert alert-warning" style="margin: 0;">
+                Sistemde hiç kategori bulunamadı. Lütfen sistem yöneticisi ile iletişime geçin.
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <table class="action-table">
+        <thead>
+            <tr>
+                <th>Foto/Icon</th>
+                <th>Kategori</th>
+                <th>Ürün Adı</th>
+                <th>Fiyat</th>
+                <th>Özellik</th>
+                <th>Satış Durumu</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any()) {
+                <tr><td colspan="7" style="text-align: center;">Menünüzde henüz aktif bir ürün bulunamadı.</td></tr>
+            }
+            @foreach(var m in Model) {
+                <tr>
+                    <td style="font-size: 1.5rem;">🍽️</td>
+                    <td>@m.Kategori?.Ad</td>
+                    <td style="font-weight: 600;">@m.Ad</td>
+                    <td style="font-weight: bold; color: var(--primary);">₺@m.Fiyat.ToString("N2")</td>
+                    <td>@(m.IsVejetaryen ? "🌱 Vejetaryen" : "-")</td>
+                    <td>
+                        <form asp-action="MenuSatisDurumTogle" method="post" style="margin:0;">
+                            <input type="hidden" name="id" value="@m.MenuKalemiId" />
+                            @if(m.IsAkti) {
+                                <button type="submit" class="badge badge-success" style="cursor:pointer;" title="Tükendi Olarak İşaretle">Şu An Satışta</button>
+                            } else {
+                                <button type="submit" class="badge badge-danger" style="cursor:pointer;" title="Satışta Olarak İşaretle">Tükendi / Kapalı</button>
+                            }
+                        </form>
+                    </td>
+                    <td>
+                        <form asp-action="MenuSayacSil" method="post" style="margin:0;" onsubmit="return confirm('Bu ürünü menüden tamamen kaldırmak istediğinize emin misiniz?');">
+                            <input type="hidden" name="id" value="@m.MenuKalemiId" />
+                            <button type="submit" class="btn-outline-sm" style="color: #ef4444; border-color: rgba(239,68,68,0.5); padding: 4px 10px;">🗑️ Kaldır</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

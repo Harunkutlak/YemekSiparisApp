@@ -1,0 +1,488 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.Kullanici>
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+}
+
+<style>
+    /* ── Modal Styles ─────────────────────────────────────────── */
+    .modal-backdrop {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        animation: fadeIn 0.2s ease;
+    }
+    .modal-backdrop.active { display: flex; align-items: center; justify-content: center; }
+    .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        width: 640px; max-width: 95vw;
+        max-height: 85vh; overflow-y: auto;
+        box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+        animation: slideUp 0.3s ease;
+    }
+    .modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+    .modal-close {
+        width: 34px; height: 34px; border-radius: 8px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--text-muted); cursor: pointer; font-size: 1.1rem;
+        display: flex; align-items: center; justify-content: center;
+        transition: var(--transition);
+    }
+    .modal-close:hover { background: rgba(239,68,68,0.15); color: #ef4444; border-color: rgba(239,68,68,0.3); }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        display: flex; justify-content: flex-end; gap: 12px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row.full { grid-template-columns: 1fr; }
+    .form-group { margin-bottom: 0; }
+    .form-group label {
+        display: block; font-size: 0.85rem; font-weight: 600;
+        color: var(--text-muted); margin-bottom: 6px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%; padding: 10px 12px; border-radius: 8px;
+        border: 1px solid var(--border); background: var(--bg-card2);
+        color: var(--text-primary); font-size: 0.9rem; outline: none;
+        transition: var(--transition);
+    }
+    .form-group input:focus, .form-group select:focus {
+        border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,90,31,0.15);
+    }
+
+    .btn-cancel {
+        padding: 10px 20px; border-radius: 8px;
+        background: transparent; border: 1px solid var(--border);
+        color: var(--text-muted); cursor: pointer; font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-cancel:hover { background: rgba(255,255,255,0.05); }
+    .btn-submit {
+        padding: 10px 20px; border-radius: 8px;
+        background: var(--primary); border: none;
+        color: white; cursor: pointer; font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-submit:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn-danger-submit {
+        padding: 10px 20px; border-radius: 8px;
+        background: #ef4444; border: none;
+        color: white; cursor: pointer; font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-danger-submit:hover { background: #dc2626; }
+
+    .btn-icon {
+        width: 34px; height: 34px; border-radius: 8px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--text-muted); cursor: pointer; font-size: 0.85rem;
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: var(--transition);
+    }
+    .btn-icon:hover { background: rgba(255,255,255,0.05); }
+    .btn-icon.edit:hover { color: var(--primary); border-color: rgba(255,90,31,0.4); }
+    .btn-icon.delete:hover { color: #ef4444; border-color: rgba(239,68,68,0.4); }
+    .btn-icon.view:hover { color: #3b82f6; border-color: rgba(59,130,246,0.4); }
+
+    .action-btns { display: flex; gap: 6px; align-items: center; }
+
+    @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .toolbar {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 24px;
+    }
+    .toolbar-title { font-size: 1rem; color: var(--text-muted); }
+    .btn-add {
+        padding: 10px 20px; border-radius: 10px;
+        background: var(--primary); border: none;
+        color: white; cursor: pointer; font-weight: 600;
+        font-size: 0.9rem; transition: var(--transition);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,90,31,0.3); }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .detail-item label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
+    .detail-item .value { font-size: 0.95rem; font-weight: 500; }
+
+    .hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+    .checkbox-row {
+        display: flex; align-items: center; gap: 10px; 
+        padding: 10px 0;
+    }
+    .checkbox-row input[type="checkbox"] {
+        width: 18px; height: 18px; cursor: pointer;
+    }
+    .checkbox-row label {
+        margin-bottom: 0; cursor: pointer;
+    }
+
+    .role-badge {
+        padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; display: inline-block;
+    }
+    .role-Musteri { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+    .role-Admin { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+    .role-RestoranSahibi { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+    .role-Kurye { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+</style>
+
+<!-- ═══ Toolbar & Table ═══ -->
+<div class="card">
+    <div class="toolbar">
+        <span class="toolbar-title">
+            Toplam <strong>@Model.Count()</strong> kullanıcı kayıtlı
+            <span style="margin-left: 12px; font-size: 0.85rem;">
+                (Aktif: <strong>@Model.Count(k => k.IsActive)</strong> · Pasif: <strong>@Model.Count(k => !k.IsActive)</strong>)
+            </span>
+        </span>
+        <button class="btn-add" onclick="openModal('addModal')">
+            <i class="fa fa-user-plus"></i> Yeni Kullanıcı Ekle
+        </button>
+    </div>
+
+    <table class="action-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Ad Soyad</th>
+                <th>E-Posta</th>
+                <th>Telefon</th>
+                <th>Rol</th>
+                <th>İhtiyaç S.</th>
+                <th>Durum</th>
+                <th>Kayıt</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var k in Model)
+            {
+                <tr style="@(!k.IsActive ? "opacity: 0.5;" : "")">
+                    <td>#@k.KullaniciId</td>
+                    <td style="font-weight: 600;">@k.Ad @k.Soyad</td>
+                    <td>@k.Email</td>
+                    <td>@k.Telefon</td>
+                    <td>
+                        @{
+                            var rolAdi = k.Rol switch {
+                                "Musteri" => "Müşteri",
+                                "Admin" => "Admin",
+                                "RestoranSahibi" => "Restoran Sahibi",
+                                "Kurye" => "Kurye",
+                                _ => k.Rol
+                            };
+                        }
+                        <span class="role-badge role-@k.Rol">@rolAdi</span>
+                    </td>
+                    <td style="text-align: center;">
+                        @if(k.IsIhtiyacSahibi) {
+                            <span title="İhtiyaç sahibi olarak doğrulanmış" style="color: #6ee7b7;">✅</span>
+                        } else {
+                            <span style="color: var(--text-muted);">—</span>
+                        }
+                    </td>
+                    <td>
+                        @if(k.IsActive) { <span class="badge badge-success">Aktif</span> }
+                        else { <span class="badge badge-danger">Pasif</span> }
+                    </td>
+                    <td style="font-size: 0.85rem;">@k.OlusturulmaTarihi.ToString("dd.MM.yyyy")</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-icon view" title="Detay" onclick="viewKullanici(@k.KullaniciId)">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                            <button class="btn-icon edit" title="Düzenle" onclick="editKullanici(@k.KullaniciId)">
+                                <i class="fa fa-pen"></i>
+                            </button>
+                            @if(k.KullaniciId != 1) {
+                                <form asp-action="KullaniciDurumDegistir" method="post" style="margin:0; display:inline;">
+                                    <input type="hidden" name="id" value="@k.KullaniciId" />
+                                    @if(k.IsActive) {
+                                        <button type="submit" class="btn-icon" title="Devre Dışı Bırak" style="color: #f59e0b; border-color: rgba(245,158,11,0.4);">
+                                            <i class="fa fa-ban"></i>
+                                        </button>
+                                    } else {
+                                        <button type="submit" class="btn-icon" title="Aktif Et" style="color: #10b981; border-color: rgba(16,185,129,0.4);">
+                                            <i class="fa fa-check"></i>
+                                        </button>
+                                    }
+                                </form>
+                                <button class="btn-icon delete" title="Sil" onclick="confirmDeleteKullanici(@k.KullaniciId, '@k.Ad @k.Soyad')">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══ MODAL: Yeni Kullanıcı Ekle ═══ -->
+<div class="modal-backdrop" id="addModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>👤 Yeni Kullanıcı Ekle</h3>
+            <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+        </div>
+        <form asp-action="KullaniciEkle" method="post">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ad *</label>
+                        <input type="text" name="ad" required placeholder="Adı giriniz" maxlength="50" />
+                    </div>
+                    <div class="form-group">
+                        <label>Soyad *</label>
+                        <input type="text" name="soyad" required placeholder="Soyadı giriniz" maxlength="50" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>E-posta *</label>
+                        <input type="email" name="email" required placeholder="ornek@mail.com" maxlength="100" />
+                    </div>
+                    <div class="form-group">
+                        <label>Telefon *</label>
+                        <input type="text" name="telefon" required placeholder="05xx xxx xx xx" maxlength="15" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Şifre *</label>
+                        <input type="password" name="sifre" required placeholder="En az 6 karakter" minlength="6" />
+                    </div>
+                    <div class="form-group">
+                        <label>Rol *</label>
+                        <select name="rol" required>
+                            <option value="Musteri">Müşteri</option>
+                            <option value="RestoranSahibi">Restoran Sahibi</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Kurye">Kurye</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Adres</label>
+                        <input type="text" name="adres" placeholder="Adres (opsiyonel)" maxlength="250" />
+                    </div>
+                </div>
+                <div class="checkbox-row">
+                    <input type="checkbox" name="isIhtiyacSahibi" value="true" id="add_ihtiyac" />
+                    <label for="add_ihtiyac">İhtiyaç sahibi olarak işaretle (Askıda Yemek modülü)</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('addModal')">İptal</button>
+                <button type="submit" class="btn-submit">✅ Kullanıcı Ekle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Kullanıcı Düzenle ═══ -->
+<div class="modal-backdrop" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✏️ Kullanıcı Düzenle</h3>
+            <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+        </div>
+        <form asp-action="KullaniciGuncelle" method="post">
+            <input type="hidden" name="id" id="edit_id" />
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ad *</label>
+                        <input type="text" name="ad" id="edit_ad" required maxlength="50" />
+                    </div>
+                    <div class="form-group">
+                        <label>Soyad *</label>
+                        <input type="text" name="soyad" id="edit_soyad" required maxlength="50" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>E-posta *</label>
+                        <input type="email" name="email" id="edit_email" required maxlength="100" />
+                    </div>
+                    <div class="form-group">
+                        <label>Telefon *</label>
+                        <input type="text" name="telefon" id="edit_telefon" required maxlength="15" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Yeni Şifre</label>
+                        <input type="password" name="yeniSifre" id="edit_sifre" placeholder="Değiştirmek istemiyorsanız boş bırakın" minlength="6" />
+                        <div class="hint">Boş bırakılırsa mevcut şifre korunur.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Rol *</label>
+                        <select name="rol" id="edit_rol" required>
+                            <option value="Musteri">Müşteri</option>
+                            <option value="RestoranSahibi">Restoran Sahibi</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Kurye">Kurye</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Adres</label>
+                        <input type="text" name="adres" id="edit_adres" placeholder="Adres (opsiyonel)" maxlength="250" />
+                    </div>
+                </div>
+                <div class="checkbox-row">
+                    <input type="checkbox" name="isIhtiyacSahibi" value="true" id="edit_ihtiyac" />
+                    <label for="edit_ihtiyac">İhtiyaç sahibi olarak işaretle</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('editModal')">İptal</button>
+                <button type="submit" class="btn-submit">💾 Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Kullanıcı Detay ═══ -->
+<div class="modal-backdrop" id="viewModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📋 Kullanıcı Detayı</h3>
+            <button class="modal-close" onclick="closeModal('viewModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-grid" id="kullaniciDetailContent">
+                <!-- AJAX ile doldurulacak -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeModal('viewModal')">Kapat</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Silme Onayı ═══ -->
+<div class="modal-backdrop" id="deleteModal">
+    <div class="modal-content" style="width: 440px;">
+        <div class="modal-header">
+            <h3>🗑️ Kullanıcı Sil</h3>
+            <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+        </div>
+        <form asp-action="KullaniciSil" method="post">
+            <input type="hidden" name="id" id="delete_kullaniciId" />
+            <div class="modal-body" style="text-align: center;">
+                <i class="fa fa-exclamation-triangle" style="font-size: 2.5rem; color: #ef4444; margin-bottom: 16px;"></i>
+                <p style="font-size: 1rem; margin-bottom: 8px;">
+                    <strong id="delete_kullaniciAd"></strong> kullanıcısını silmek istediğinize emin misiniz?
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Bu işlem kullanıcıyı pasif duruma alacaktır (soft-delete).</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button type="button" class="btn-cancel" onclick="closeModal('deleteModal')">Vazgeç</button>
+                <button type="submit" class="btn-danger-submit">🗑️ Evet, Sil</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Backdrop tıklayınca kapat
+    document.querySelectorAll('.modal-backdrop').forEach(m => {
+        m.addEventListener('click', function(e) {
+            if (e.target === this) closeModal(this.id);
+        });
+    });
+
+    // ESC tuşu ile kapat
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop.active').forEach(m => closeModal(m.id));
+        }
+    });
+
+    // ── Kullanıcı Düzenle ──
+    async function editKullanici(id) {
+        try {
+            const response = await fetch(`/Admin/KullaniciDetay/${id}`);
+            const data = await response.json();
+
+            document.getElementById('edit_id').value = data.kullaniciId;
+            document.getElementById('edit_ad').value = data.ad;
+            document.getElementById('edit_soyad').value = data.soyad;
+            document.getElementById('edit_email').value = data.email;
+            document.getElementById('edit_telefon').value = data.telefon;
+            document.getElementById('edit_rol').value = data.rol;
+            document.getElementById('edit_adres').value = data.adres || '';
+            document.getElementById('edit_sifre').value = '';
+            document.getElementById('edit_ihtiyac').checked = data.isIhtiyacSahibi;
+
+            // Admin hesabı rol değiştirmeyi kısıtla
+            document.getElementById('edit_rol').disabled = (data.kullaniciId === 1);
+
+            openModal('editModal');
+        } catch (err) {
+            alert('Kullanıcı bilgileri yüklenirken hata oluştu.');
+        }
+    }
+
+    // ── Kullanıcı Detay Görüntüle ──
+    async function viewKullanici(id) {
+        try {
+            const response = await fetch(`/Admin/KullaniciDetay/${id}`);
+            const d = await response.json();
+
+            const rolMap = { 'Musteri': 'Müşteri', 'Admin': 'Admin', 'RestoranSahibi': 'Restoran Sahibi', 'Kurye': 'Kurye' };
+
+            document.getElementById('kullaniciDetailContent').innerHTML = `
+                <div class="detail-item"><label>ID</label><div class="value">#${d.kullaniciId}</div></div>
+                <div class="detail-item"><label>Ad Soyad</label><div class="value">${d.ad} ${d.soyad}</div></div>
+                <div class="detail-item"><label>E-posta</label><div class="value">${d.email}</div></div>
+                <div class="detail-item"><label>Telefon</label><div class="value">${d.telefon}</div></div>
+                <div class="detail-item"><label>Rol</label><div class="value"><span class="role-badge role-${d.rol}">${rolMap[d.rol] || d.rol}</span></div></div>
+                <div class="detail-item"><label>Adres</label><div class="value">${d.adres || '-'}</div></div>
+                <div class="detail-item"><label>İhtiyaç Sahibi</label><div class="value">${d.isIhtiyacSahibi ? '<span style="color: #6ee7b7;">✅ Evet</span>' : 'Hayır'}</div></div>
+                <div class="detail-item"><label>Hesap Durumu</label><div class="value">${d.isActive ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-danger">Pasif</span>'}</div></div>
+                <div class="detail-item"><label>Kayıt Tarihi</label><div class="value">${d.olusturulmaTarihi}</div></div>
+                <div class="detail-item"><label>Son Güncelleme</label><div class="value">${d.guncellenmeTarihi || '-'}</div></div>
+            `;
+            openModal('viewModal');
+        } catch (err) {
+            alert('Kullanıcı detayları yüklenirken hata oluştu.');
+        }
+    }
+
+    // ── Silme Onayı ──
+    function confirmDeleteKullanici(id, ad) {
+        document.getElementById('delete_kullaniciId').value = id;
+        document.getElementById('delete_kullaniciAd').textContent = ad;
+        openModal('deleteModal');
+    }
+</script>
+}

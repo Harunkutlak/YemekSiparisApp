@@ -26,7 +26,11 @@
                 {
                     if (User.IsInRole("Admin"))
                     {
-                        <a asp-controller="Admin" asp-action="Index">Yönetim</a>
+                        <a asp-controller="Admin" asp-action="Index">Admin Paneli</a>
+                    }
+                    else if (User.IsInRole("RestoranSahibi"))
+                    {
+                        <a asp-controller="RestoranPanel" asp-action="Index">Restoran Paneli</a>
                     }
                     <a asp-controller="Siparis" asp-action="Gecmis">Siparişlerim</a>
                     <div class="nav-user">

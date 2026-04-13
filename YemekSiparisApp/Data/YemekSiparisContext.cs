@@ -85,7 +85,7 @@ namespace YemekSiparisApp.Data
             // ── SİPARİŞ ──────────────────────────────────────────────────────
             modelBuilder.Entity<Siparis>(entity =>
             {
-                entity.ToTable("Siparisler");
+                entity.ToTable("Siparisler", tb => tb.HasTrigger("trg_SiparisTeslim_CiroGuncelle"));
                 // CHECK: ToplamTutar > 0
                 entity.HasCheckConstraint("CK_Siparisler_ToplamTutar", "ToplamTutar > 0");
                 entity.HasCheckConstraint("CK_Siparisler_Durum",
@@ -139,7 +139,7 @@ namespace YemekSiparisApp.Data
             // ── ASKIDA YEMEK BAĞIŞ ───────────────────────────────────────
             modelBuilder.Entity<AskidaYemekBagis>(entity =>
             {
-                entity.ToTable("AskidaYemekBagislari");
+                entity.ToTable("AskidaYemekBagislari", tb => tb.HasTrigger("trg_AskidaBagis_BakiyeArtir"));
                 // CHECK: Miktar > 0
                 entity.HasCheckConstraint("CK_Bagis_Miktar", "Miktar > 0");
 
@@ -157,7 +157,7 @@ namespace YemekSiparisApp.Data
             // ── ASKIDA YEMEK KULLANIM ─────────────────────────────────────
             modelBuilder.Entity<AskidaYemekKullanim>(entity =>
             {
-                entity.ToTable("AskidaYemekKullanimlari");
+                entity.ToTable("AskidaYemekKullanimlari", tb => tb.HasTrigger("trg_AskidaKullanim_BakiyeDus"));
                 entity.HasCheckConstraint("CK_Kullanim_Miktar", "KullanilanMiktar > 0");
 
                 entity.HasOne(ku => ku.KullaniciKullanici)

@@ -1,0 +1,47 @@
+@{
+    ViewData["Title"] = "Genel Özet";
+}
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 40px;">
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-users"></i></div>
+        <div class="stat-info">
+            <h4>Kayıtlı Kullanıcı</h4>
+            <div class="value">@ViewBag.ToplamKullanici</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-shopping-bag"></i></div>
+        <div class="stat-info">
+            <h4>Sevk Edilen Sipariş</h4>
+            <div class="value">@ViewBag.ToplamSiparis</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-store"></i></div>
+        <div class="stat-info">
+            <h4>Anlaşmalı Restoran</h4>
+            <div class="value">@ViewBag.ToplamRestoran</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-heart"></i></div>
+        <div class="stat-info">
+            <h4>Askıda Yemek Kasası</h4>
+            <div class="value">₺@ViewBag.ToplamHavuzBakiye?.ToString("N2")</div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card" style="padding: 30px; text-align: center;">
+    <h3 style="margin-bottom: 16px;">Sistem Durumu: Çevrimiçi 🟢</h3>
+    <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto;">
+        Hoş geldiniz. Sol menüyü kullanarak restoranları denetleyebilir, 
+        kullanıcı rollerini güncelleyebilir ve Askıda Yemek sisteminin genel kasa limitlerini gözlemleyebilirsiniz.
+    </p>
+</div>

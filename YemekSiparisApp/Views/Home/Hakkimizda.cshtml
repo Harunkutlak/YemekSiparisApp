@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Hakkımızda";
+}
+
+<div class="container my-5">
+    <div class="row align-items-center">
+        <div class="col-md-6 mb-4">
+            <h1 class="display-4 fw-bold mb-3" style="color: var(--primary);">YemekSiparis'e <br/> Hoş Geldiniz</h1>
+            <p class="lead text-muted mb-4">
+                Van'ın yerel lezzetlerini, teknolojinin hızını ve sivil toplumun dayanışma gücünü tek bir platformda birleştirdik.
+            </p>
+            <p>
+                Projemiz sadece klasik bir yemek sipariş uygulaması değil, aynı zamanda <strong>"Askıda Yemek"</strong> felsefesini dijital dünyaya taşıyan bir köprüdür. Havuzumuza yapılan bağışlarla, Van'daki ihtiyaç sahibi vatandaşlarımıza sıcak bir yemek ulaştırıyoruz.
+            </p>
+            <p>
+                Misyonumuz; restoranları dijital vitrinle buluştururken toplumsal fayda sağlamaktır. Restoranlarımızı yerinde ziyaret ederek denetliyor ve kurye ekibimiz aracılığıyla sizlere ulaştırıyoruz.
+            </p>
+        </div>
+        <div class="col-md-6">
+            <div style="background: linear-gradient(135deg, #fceceb, #fff4e5); border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                <div style="font-size: 5rem; margin-bottom: 20px;">🤝</div>
+                <h3 class="mb-3">Dayanışma Modülü</h3>
+                <p class="mb-4">Eğer bir komşunuzun veya öğrencinin ihtiyacı olduğunu düşünüyorsanız, hemen havuzumuza destek olabilirsiniz.</p>
+                <a asp-controller="AskidaYemek" asp-action="Bagis" class="btn btn-success btn-lg" style="background-color:#10b981; border:none;">Askıda Yemek Bağışı Yap</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -11,7 +11,7 @@
         @if (!ViewData.ModelState.IsValid)
         {
             <div class="alert alert-danger">
-                Lütfen giriş bilgilerinizi kontrol ediniz.
+                @Html.ValidationSummary(true, "")
             </div>
         }
 

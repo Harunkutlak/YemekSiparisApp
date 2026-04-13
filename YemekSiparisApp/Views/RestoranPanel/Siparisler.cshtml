@@ -1,0 +1,74 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.Siparis>
+@{
+    ViewData["Title"] = "Sipariş Yönetimi";
+}
+
+<div class="card">
+    <div class="card-body">
+        <p style="color: var(--text-muted); margin-bottom: 24px;">Restoranınıza gelen tüm siparişleri ve mevcut durumlarını aşağıdan takip edebilir, Müşteri için siparişin durumunu güncelleyebilirsiniz.</p>
+        
+        <table class="action-table">
+            <thead>
+                <tr>
+                    <th>Sipariş #</th>
+                    <th>Tarih</th>
+                    <th>Müşteri</th>
+                    <th>İçerik Özeti</th>
+                    <th>Tutar</th>
+                    <th>Güncel Durum</th>
+                    <th>Aksiyon (Durum Güncelle)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any()) {
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted);">Henüz siparişiniz bulunmamaktadır.</td>
+                    </tr>
+                }
+                
+                @foreach(var s in Model) {
+                    var isBitti = (s.Durum == "TeslimEdildi" || s.Durum == "Iptal");
+                    
+                    <tr>
+                        <td style="font-weight: 600;">#@s.SiparisId</td>
+                        <td>@s.OlusturulmaTarihi.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>@s.MusteriKullanici.Ad @s.MusteriKullanici.Soyad<br/><span style="font-size: 0.8rem; color: var(--text-muted);">@s.MusteriKullanici.Telefon</span></td>
+                        <td style="font-size: 0.85rem; max-width: 250px;">
+                            @foreach(var sd in s.SiparisDetaylari) {
+                                <div>@sd.Miktar x @(sd.MenuKalemi?.Ad ?? "Ürün")</div>
+                            }
+                            @if(!string.IsNullOrEmpty(s.SiparisNotu)) {
+                                <div style="color: var(--secondary); margin-top: 4px;"><i>Not: @s.SiparisNotu</i></div>
+                            }
+                        </td>
+                        <td style="font-weight: bold; color: var(--primary);">₺@s.ToplamTutar.ToString("N2")</td>
+                        
+                        <td>
+                            <span class="badge @(s.Durum == "Beklemede" ? "badge-warning" : (s.Durum == "Onaylandi" || s.Durum == "Hazirlaniyor" ? "badge-info" : (s.Durum=="TeslimEdildi" ? "badge-success" : "badge-danger")))">
+                                @s.Durum
+                            </span>
+                        </td>
+                        
+                        <td>
+                            @if (!isBitti) {
+                                <form asp-action="SiparisDurumGuncelle" method="post" style="display: flex; gap: 8px; margin: 0;">
+                                    <input type="hidden" name="id" value="@s.SiparisId" />
+                                    <select name="yeniDurum" style="background: var(--bg-card2); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; outline:none; padding: 4px;">
+                                        <!option value="Onaylandi" @(s.Durum=="Onaylandi"?"selected":"")>Onaylandı</!option>
+                                        <!option value="Hazirlaniyor" @(s.Durum=="Hazirlaniyor"?"selected":"")>Hazırlanıyor</!option>
+                                        <!option value="YoldaKurye" @(s.Durum=="YoldaKurye"?"selected":"")>Yolda (Kuryede)</!option>
+                                        <!option value="TeslimEdildi">Teslim Edildi</!option>
+                                        <!option value="Iptal">İptal Et</!option>
+                                    </select>
+                                    <button type="submit" class="btn-primary-sm" style="padding: 6px 12px;">Uygula</button>
+                                </form>
+                            } else {
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">İşlem Tamamlandı</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

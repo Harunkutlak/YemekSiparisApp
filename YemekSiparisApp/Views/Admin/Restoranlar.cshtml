@@ -1,0 +1,463 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.Restoran>
+@{
+    ViewData["Title"] = "Restoran Yönetimi";
+    var sahipler = ViewBag.Sahipler as IEnumerable<YemekSiparisApp.Models.Entities.Kullanici>;
+    var tumSahipler = ViewBag.TumSahipler as IEnumerable<YemekSiparisApp.Models.Entities.Kullanici>;
+}
+
+<style>
+    /* ── Modal Styles ─────────────────────────────────────────── */
+    .modal-backdrop {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        animation: fadeIn 0.2s ease;
+    }
+    .modal-backdrop.active { display: flex; align-items: center; justify-content: center; }
+    .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        width: 640px; max-width: 95vw;
+        max-height: 85vh; overflow-y: auto;
+        box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+        animation: slideUp 0.3s ease;
+    }
+    .modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+    .modal-close {
+        width: 34px; height: 34px; border-radius: 8px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--text-muted); cursor: pointer; font-size: 1.1rem;
+        display: flex; align-items: center; justify-content: center;
+        transition: var(--transition);
+    }
+    .modal-close:hover { background: rgba(239,68,68,0.15); color: #ef4444; border-color: rgba(239,68,68,0.3); }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        display: flex; justify-content: flex-end; gap: 12px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row.full { grid-template-columns: 1fr; }
+    .form-group { margin-bottom: 0; }
+    .form-group label {
+        display: block; font-size: 0.85rem; font-weight: 600;
+        color: var(--text-muted); margin-bottom: 6px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%; padding: 10px 12px; border-radius: 8px;
+        border: 1px solid var(--border); background: var(--bg-card2);
+        color: var(--text-primary); font-size: 0.9rem; outline: none;
+        transition: var(--transition);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,90,31,0.15);
+    }
+    .form-group textarea { resize: vertical; min-height: 60px; }
+
+    .btn-cancel {
+        padding: 10px 20px; border-radius: 8px;
+        background: transparent; border: 1px solid var(--border);
+        color: var(--text-muted); cursor: pointer; font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-cancel:hover { background: rgba(255,255,255,0.05); }
+    .btn-submit {
+        padding: 10px 20px; border-radius: 8px;
+        background: var(--primary); border: none;
+        color: white; cursor: pointer; font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-submit:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn-danger-submit {
+        padding: 10px 20px; border-radius: 8px;
+        background: #ef4444; border: none;
+        color: white; cursor: pointer; font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-danger-submit:hover { background: #dc2626; }
+
+    .btn-icon {
+        width: 34px; height: 34px; border-radius: 8px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--text-muted); cursor: pointer; font-size: 0.85rem;
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: var(--transition);
+    }
+    .btn-icon:hover { background: rgba(255,255,255,0.05); }
+    .btn-icon.edit:hover { color: var(--primary); border-color: rgba(255,90,31,0.4); }
+    .btn-icon.delete:hover { color: #ef4444; border-color: rgba(239,68,68,0.4); }
+    .btn-icon.view:hover { color: #3b82f6; border-color: rgba(59,130,246,0.4); }
+
+    .action-btns { display: flex; gap: 6px; align-items: center; }
+
+    @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .toolbar {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 24px;
+    }
+    .toolbar-title { font-size: 1rem; color: var(--text-muted); }
+    .btn-add {
+        padding: 10px 20px; border-radius: 10px;
+        background: var(--primary); border: none;
+        color: white; cursor: pointer; font-weight: 600;
+        font-size: 0.9rem; transition: var(--transition);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,90,31,0.3); }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .detail-item label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
+    .detail-item .value { font-size: 0.95rem; font-weight: 500; }
+</style>
+
+<!-- ═══ Toolbar ═══ -->
+<div class="card">
+    <div class="toolbar">
+        <span class="toolbar-title">Toplam <strong>@Model.Count()</strong> restoran kayıtlı</span>
+        @if(sahipler != null && sahipler.Any()) {
+            <button class="btn-add" onclick="openModal('addModal')">
+                <i class="fa fa-plus"></i> Yeni Restoran Ekle
+            </button>
+        } else {
+            <span style="color: #fcd34d; font-size: 0.85rem;">
+                <i class="fa fa-info-circle"></i> Boşta RestoranSahibi hesabı yok — Önce Kullanıcılar'dan atayın.
+            </span>
+        }
+    </div>
+
+    <table class="action-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Restoran Adı</th>
+                <th>Sahip</th>
+                <th>Şehir</th>
+                <th>Puan</th>
+                <th>Genel Ciro</th>
+                <th>Durum</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var r in Model) {
+                <tr>
+                    <td>#@r.RestoranId</td>
+                    <td style="font-weight: 600;">@r.Ad</td>
+                    <td>@(r.SahipKullanici != null ? r.SahipKullanici.Ad + " " + r.SahipKullanici.Soyad : "-")</td>
+                    <td>@(r.Sehir ?? "-")</td>
+                    <td>⭐ @(r.Puan?.ToString("N2") ?? "-")</td>
+                    <td>₺@r.ToplamCiro.ToString("N2")</td>
+                    <td>
+                        @if(r.IsActive) { <span class="badge badge-success">Yayında</span> }
+                        else { <span class="badge badge-danger">Pasif</span> }
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-icon view" title="Detay" onclick="viewRestoran(@r.RestoranId)">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                            <button class="btn-icon edit" title="Düzenle" onclick="editRestoran(@r.RestoranId)">
+                                <i class="fa fa-pen"></i>
+                            </button>
+                            <form asp-action="RestoranDurumDegistir" method="post" style="margin:0; display:inline;">
+                                <input type="hidden" name="id" value="@r.RestoranId" />
+                                @if(r.IsActive) {
+                                    <button type="submit" class="btn-icon" title="Pasife Al" style="color: #f59e0b; border-color: rgba(245,158,11,0.4);">
+                                        <i class="fa fa-pause"></i>
+                                    </button>
+                                } else {
+                                    <button type="submit" class="btn-icon" title="Aktif Et" style="color: #10b981; border-color: rgba(16,185,129,0.4);">
+                                        <i class="fa fa-play"></i>
+                                    </button>
+                                }
+                            </form>
+                            <button class="btn-icon delete" title="Sil" onclick="confirmDeleteRestoran(@r.RestoranId, '@r.Ad')">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══ MODAL: Yeni Restoran Ekle ═══ -->
+<div class="modal-backdrop" id="addModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>➕ Yeni Restoran Ekle</h3>
+            <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+        </div>
+        <form asp-action="RestoranEkle" method="post">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Restoran Adı *</label>
+                        <input type="text" name="Ad" required placeholder="Restoran adını giriniz" />
+                    </div>
+                    <div class="form-group">
+                        <label>Sahip Hesabı *</label>
+                        <select name="SahipKullaniciId" required>
+                            <option value="">-- Seçiniz --</option>
+                            @if(sahipler != null) {
+                                @foreach(var s in sahipler) {
+                                    <option value="@s.KullaniciId">@s.Ad @s.Soyad (@s.Email)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Açıklama</label>
+                        <textarea name="Aciklama" placeholder="Restoran hakkında kısa bilgi..."></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Adres *</label>
+                        <input type="text" name="Adres" required placeholder="Tam adres" />
+                    </div>
+                    <div class="form-group">
+                        <label>Şehir</label>
+                        <input type="text" name="Sehir" placeholder="Ör: Van" value="Van" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Telefon</label>
+                        <input type="text" name="Telefon" placeholder="05xx xxx xx xx" />
+                    </div>
+                    <div class="form-group">
+                        <label>E-posta</label>
+                        <input type="email" name="Email" placeholder="restoran@mail.com" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tahmini Teslimat (dk)</label>
+                        <input type="number" name="TahminiTeslimatDakika" value="30" min="5" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Min. Sipariş Ücreti (₺)</label>
+                        <input type="number" name="MinSiparisUcreti" value="100" min="0" required />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('addModal')">İptal</button>
+                <button type="submit" class="btn-submit">✅ Restoran Ekle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Restoran Düzenle ═══ -->
+<div class="modal-backdrop" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✏️ Restoran Düzenle</h3>
+            <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+        </div>
+        <form asp-action="RestoranGuncelle" method="post">
+            <input type="hidden" name="restoranId" id="edit_restoranId" />
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Restoran Adı *</label>
+                        <input type="text" name="ad" id="edit_ad" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Sahip Hesabı *</label>
+                        <select name="sahipKullaniciId" id="edit_sahipKullaniciId" required>
+                            @if(tumSahipler != null) {
+                                @foreach(var s in tumSahipler) {
+                                    <option value="@s.KullaniciId">@s.Ad @s.Soyad (@s.Email)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Açıklama</label>
+                        <textarea name="aciklama" id="edit_aciklama"></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Adres *</label>
+                        <input type="text" name="adres" id="edit_adres" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Şehir</label>
+                        <input type="text" name="sehir" id="edit_sehir" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Telefon</label>
+                        <input type="text" name="telefon" id="edit_telefon" />
+                    </div>
+                    <div class="form-group">
+                        <label>E-posta</label>
+                        <input type="email" name="email" id="edit_email" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tahmini Teslimat (dk)</label>
+                        <input type="number" name="tahminiTeslimatDakika" id="edit_dakika" min="5" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Min. Sipariş Ücreti (₺)</label>
+                        <input type="number" name="minSiparisUcreti" id="edit_minSiparis" min="0" required />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('editModal')">İptal</button>
+                <button type="submit" class="btn-submit">💾 Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Restoran Detay ═══ -->
+<div class="modal-backdrop" id="viewModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📋 Restoran Detayı</h3>
+            <button class="modal-close" onclick="closeModal('viewModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-grid" id="restoranDetailContent">
+                <!-- AJAX ile doldurulacak -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeModal('viewModal')">Kapat</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Silme Onayı ═══ -->
+<div class="modal-backdrop" id="deleteModal">
+    <div class="modal-content" style="width: 440px;">
+        <div class="modal-header">
+            <h3>🗑️ Restoran Sil</h3>
+            <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+        </div>
+        <form asp-action="RestoranSil" method="post">
+            <input type="hidden" name="id" id="delete_restoranId" />
+            <div class="modal-body" style="text-align: center;">
+                <i class="fa fa-exclamation-triangle" style="font-size: 2.5rem; color: #ef4444; margin-bottom: 16px;"></i>
+                <p style="font-size: 1rem; margin-bottom: 8px;">
+                    <strong id="delete_restoranAd"></strong> restoranını silmek istediğinize emin misiniz?
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Bu işlem restoranı ve menüsünü pasif duruma alacaktır.</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button type="button" class="btn-cancel" onclick="closeModal('deleteModal')">Vazgeç</button>
+                <button type="submit" class="btn-danger-submit">🗑️ Evet, Sil</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Backdrop tıklayınca kapat
+    document.querySelectorAll('.modal-backdrop').forEach(m => {
+        m.addEventListener('click', function(e) {
+            if (e.target === this) closeModal(this.id);
+        });
+    });
+
+    // ESC tuşu ile kapat
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop.active').forEach(m => closeModal(m.id));
+        }
+    });
+
+    // ── Restoran Düzenle ──
+    async function editRestoran(id) {
+        try {
+            const response = await fetch(`/Admin/RestoranDetay/${id}`);
+            const data = await response.json();
+
+            document.getElementById('edit_restoranId').value = data.restoranId;
+            document.getElementById('edit_ad').value = data.ad;
+            document.getElementById('edit_aciklama').value = data.aciklama || '';
+            document.getElementById('edit_adres').value = data.adres;
+            document.getElementById('edit_sehir').value = data.sehir || '';
+            document.getElementById('edit_telefon').value = data.telefon || '';
+            document.getElementById('edit_email').value = data.email || '';
+            document.getElementById('edit_dakika').value = data.tahminiTeslimatDakika;
+            document.getElementById('edit_minSiparis').value = data.minSiparisUcreti;
+            document.getElementById('edit_sahipKullaniciId').value = data.sahipKullaniciId;
+
+            openModal('editModal');
+        } catch (err) {
+            alert('Restoran bilgileri yüklenirken hata oluştu.');
+        }
+    }
+
+    // ── Restoran Detay Görüntüle ──
+    async function viewRestoran(id) {
+        try {
+            const response = await fetch(`/Admin/RestoranDetay/${id}`);
+            const d = await response.json();
+
+            document.getElementById('restoranDetailContent').innerHTML = `
+                <div class="detail-item"><label>ID</label><div class="value">#${d.restoranId}</div></div>
+                <div class="detail-item"><label>Restoran Adı</label><div class="value">${d.ad}</div></div>
+                <div class="detail-item"><label>Sahip</label><div class="value">${d.sahipAdi || '-'}</div></div>
+                <div class="detail-item"><label>Şehir</label><div class="value">${d.sehir || '-'}</div></div>
+                <div class="detail-item"><label>Adres</label><div class="value">${d.adres}</div></div>
+                <div class="detail-item"><label>Telefon</label><div class="value">${d.telefon || '-'}</div></div>
+                <div class="detail-item"><label>E-posta</label><div class="value">${d.email || '-'}</div></div>
+                <div class="detail-item"><label>Açıklama</label><div class="value">${d.aciklama || '-'}</div></div>
+                <div class="detail-item"><label>Puan</label><div class="value">⭐ ${d.puan ? d.puan.toFixed(2) : '-'} (${d.puanSayisi} oy)</div></div>
+                <div class="detail-item"><label>Toplam Ciro</label><div class="value">₺${d.toplamCiro.toFixed(2)}</div></div>
+                <div class="detail-item"><label>Teslimat Süresi</label><div class="value">${d.tahminiTeslimatDakika} dk</div></div>
+                <div class="detail-item"><label>Min. Sipariş</label><div class="value">₺${d.minSiparisUcreti}</div></div>
+                <div class="detail-item"><label>Durum</label><div class="value">${d.isActive ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-danger">Pasif</span>'}</div></div>
+                <div class="detail-item"><label>Oluşturulma</label><div class="value">${d.olusturulmaTarihi}</div></div>
+            `;
+            openModal('viewModal');
+        } catch (err) {
+            alert('Restoran detayları yüklenirken hata oluştu.');
+        }
+    }
+
+    // ── Silme Onayı ──
+    function confirmDeleteRestoran(id, ad) {
+        document.getElementById('delete_restoranId').value = id;
+        document.getElementById('delete_restoranAd').textContent = ad;
+        openModal('deleteModal');
+    }
+</script>
+}
