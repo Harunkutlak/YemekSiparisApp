@@ -135,7 +135,9 @@
             </span>
         }
     </div>
+</div>
 
+<div class="card">
     <table class="action-table">
         <thead>
             <tr>
@@ -171,17 +173,17 @@
                                 <i class="fa fa-pen"></i>
                             </button>
                             <form asp-action="RestoranDurumDegistir" method="post" style="margin:0; display:inline;">
-                                <input type="hidden" name="id" value="@r.RestoranId" />
-                                @if(r.IsActive) {
+                            <input type="hidden" name="id" value="@r.RestoranId" />
+                            @if(r.IsActive) {
                                     <button type="submit" class="btn-icon" title="Pasife Al" style="color: #f59e0b; border-color: rgba(245,158,11,0.4);">
                                         <i class="fa fa-pause"></i>
                                     </button>
-                                } else {
+                            } else {
                                     <button type="submit" class="btn-icon" title="Aktif Et" style="color: #10b981; border-color: rgba(16,185,129,0.4);">
                                         <i class="fa fa-play"></i>
                                     </button>
-                                }
-                            </form>
+                            }
+                        </form>
                             <button class="btn-icon delete" title="Sil" onclick="confirmDeleteRestoran(@r.RestoranId, '@r.Ad')">
                                 <i class="fa fa-trash"></i>
                             </button>

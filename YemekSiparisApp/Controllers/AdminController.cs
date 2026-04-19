@@ -74,7 +74,7 @@ namespace YemekSiparisApp.Controllers
                 model.ToplamCiro = 0;
                 model.PuanSayisi = 0;
                 model.OlusturulmaTarihi = DateTime.Now;
-
+                
                 _context.Restoranlar.Add(model);
                 await _context.SaveChangesAsync();
                 TempData["Mesaj"] = "Restoran başarıyla eklendi.";
@@ -311,9 +311,9 @@ namespace YemekSiparisApp.Controllers
             kullanici.Soyad = soyad;
             kullanici.Email = email;
             kullanici.Telefon = telefon;
-            kullanici.Rol = rol;
+                kullanici.Rol = rol;
             kullanici.Adres = adres;
-            kullanici.IsIhtiyacSahibi = isIhtiyacSahibi;
+                kullanici.IsIhtiyacSahibi = isIhtiyacSahibi;
             kullanici.GuncellenmeTarihi = DateTime.Now;
 
             // Şifre değişikliği varsa uygula
@@ -348,7 +348,7 @@ namespace YemekSiparisApp.Controllers
 
             kullanici.IsActive = !kullanici.IsActive;
             kullanici.GuncellenmeTarihi = DateTime.Now;
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
             TempData["Mesaj"] = kullanici.IsActive
                 ? $"\"{kullanici.Ad} {kullanici.Soyad}\" hesabı aktif edildi."

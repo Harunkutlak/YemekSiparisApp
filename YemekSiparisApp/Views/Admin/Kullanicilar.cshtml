@@ -255,31 +255,31 @@
             </button>
         </div>
     </div>
-
-    <table class="action-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Ad Soyad</th>
-                <th>E-Posta</th>
+        
+        <table class="action-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ad Soyad</th>
+                    <th>E-Posta</th>
                 <th>Telefon</th>
                 @if (string.IsNullOrEmpty(aktifRol)) { <th>Rol</th> }
                 <th>İhtiyaç S.</th>
                 <th>Durum</th>
                 <th>Kayıt</th>
                 <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var k in Model)
-            {
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var k in Model)
+                {
                 <tr style="@(!k.IsActive ? "opacity: 0.5;" : "")">
-                    <td>#@k.KullaniciId</td>
-                    <td style="font-weight: 600;">@k.Ad @k.Soyad</td>
-                    <td>@k.Email</td>
+                            <td>#@k.KullaniciId</td>
+                            <td style="font-weight: 600;">@k.Ad @k.Soyad</td>
+                            <td>@k.Email</td>
                     <td>@k.Telefon</td>
                     @if (string.IsNullOrEmpty(aktifRol)) {
-                        <td>
+                            <td>
                             @{
                                 var rolAdi = k.Rol switch {
                                     "Musteri" => "Müşteri",
@@ -288,7 +288,7 @@
                                     "Kurye" => "Kurye",
                                     _ => k.Rol
                                 };
-                            }
+                                }
                             <span class="role-badge role-@k.Rol">@rolAdi</span>
                         </td>
                     }
@@ -297,14 +297,14 @@
                             <span title="İhtiyaç sahibi olarak doğrulanmış" style="color: #6ee7b7;">✅</span>
                         } else {
                             <span style="color: var(--text-muted);">—</span>
-                        }
-                    </td>
+                                }
+                            </td>
                     <td>
                         @if(k.IsActive) { <span class="badge badge-success">Aktif</span> }
                         else { <span class="badge badge-danger">Pasif</span> }
-                    </td>
+                            </td>
                     <td style="font-size: 0.85rem;">@k.OlusturulmaTarihi.ToString("dd.MM.yyyy")</td>
-                    <td>
+                            <td>
                         <div class="action-btns">
                             <button class="btn-icon view" title="Detay" onclick="viewKullanici(@k.KullaniciId)">
                                 <i class="fa fa-eye"></i>
@@ -328,14 +328,15 @@
                                 <button class="btn-icon delete" title="Sil" onclick="confirmDeleteKullanici(@k.KullaniciId, '@k.Ad @k.Soyad')">
                                     <i class="fa fa-trash"></i>
                                 </button>
-                            }
+                                }
                         </div>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+                            </td>
+                        </form>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
 <!-- ═══ MODAL: Yeni Kullanıcı Ekle ═══ -->
 <div class="modal-backdrop" id="addModal">

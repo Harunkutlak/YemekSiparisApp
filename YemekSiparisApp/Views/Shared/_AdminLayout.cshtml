@@ -141,7 +141,7 @@
                     </a>
                     <div class="admin-menu-dropdown @(isKullaniciPage ? "open" : "")">
                         <a href="javascript:void(0)" class="admin-menu-item @(isKullaniciPage ? "active" : "")" onclick="toggleDropdown(this)">
-                            <i class="fa fa-users" style="width:20px;"></i> Kullanıcılar
+                        <i class="fa fa-users" style="width:20px;"></i> Kullanıcılar
                             <i class="fa fa-chevron-down dropdown-arrow" style="margin-left:auto; font-size:0.7rem; transition: transform 0.3s;"></i>
                         </a>
                         <div class="admin-submenu">
@@ -159,7 +159,7 @@
                             </a>
                             <a asp-controller="Admin" asp-action="Kullanicilar" asp-route-rol="Admin" class="admin-submenu-item @(currentRol == "Admin" ? "active" : "")">
                                 <i class="fa fa-shield-halved" style="width:16px; font-size:0.75rem; color:#fca5a5;"></i> Adminler
-                            </a>
+                    </a>
                         </div>
                     </div>
                     <a asp-controller="Admin" asp-action="AskidaYemek" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "AskidaYemek" ? "active" : "")">
