@@ -48,6 +48,12 @@
                     <div class="alert alert-danger" style="width: 100%; text-align: center; z-index: 2;">
                         Siparişiniz İptal Edildi.
                     </div>
+                } else if(Model.Durum == "AskidaOnayBekliyor") {
+                    <div style="width: 100%; text-align: center; z-index: 2; padding: 20px; background: rgba(252,211,77,0.1); border: 1.5px dashed #fcd34d; border-radius: 12px; color: #fcd34d;">
+                        <i class="fa fa-hourglass-half" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+                        <strong style="font-size: 1.1rem;">Admin Onayı Bekliyor</strong>
+                        <p style="font-size: 0.9rem; margin-top: 5px; opacity: 0.9;">Bu siparişi Askıda Yemek fonuyla almak istediğiniz için Admin onayı bekleniyor. Onaylandığında hazırlık başlayacaktır.</p>
+                    </div>
                 } else {
                     <!-- İlerleme çizgisi -->
                     <div style="position: absolute; top: 50%; left: 0; width: @progressBarWidth%; height: 4px; background: var(--primary); z-index: 1; transform: translateY(-50%); transition: width 0.5s ease;"></div>

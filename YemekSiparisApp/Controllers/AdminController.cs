@@ -25,10 +25,11 @@ namespace YemekSiparisApp.Controllers
         // GET: /Admin
         public async Task<IActionResult> Index()
         {
-            ViewBag.ToplamKullanici = await _context.Kullanicilar.CountAsync();
-            ViewBag.ToplamSiparis = await _context.Siparisler.CountAsync();
-            ViewBag.ToplamRestoran = await _context.Restoranlar.CountAsync();
-            ViewBag.ToplamHavuzBakiye = await _context.AskidaYemekHavuzlari.SumAsync(h => h.ToplamBakiye);
+            try { ViewBag.ToplamKullanici = await _context.Kullanicilar.CountAsync(); } catch { ViewBag.ToplamKullanici = 0; }
+            try { ViewBag.ToplamSiparis = await _context.Siparisler.CountAsync(); } catch { ViewBag.ToplamSiparis = 0; }
+            try { ViewBag.ToplamRestoran = await _context.Restoranlar.CountAsync(); } catch { ViewBag.ToplamRestoran = 0; }
+            try { ViewBag.ToplamHavuzBakiye = await _context.AskidaYemekHavuzlari.SumAsync(h => (decimal?)h.ToplamBakiye) ?? 0; } catch { ViewBag.ToplamHavuzBakiye = 0; }
+            try { ViewBag.BekleyenBasvuruSayisi = await _context.AskidaYemekBasvurulari.CountAsync(b => b.Durum == "Beklemede"); } catch { ViewBag.BekleyenBasvuruSayisi = 0; }
 
             return View();
         }
@@ -41,6 +42,8 @@ namespace YemekSiparisApp.Controllers
         // GET: /Admin/Restoranlar
         public async Task<IActionResult> Restoranlar()
         {
+            try { ViewBag.BekleyenBasvuruSayisi = await _context.AskidaYemekBasvurulari.CountAsync(b => b.Durum == "Beklemede"); } catch { ViewBag.BekleyenBasvuruSayisi = 0; }
+            try { ViewBag.BekleyenSiparisSayisi = await _context.Siparisler.CountAsync(s => s.Durum == "AskidaOnayBekliyor"); } catch { ViewBag.BekleyenSiparisSayisi = 0; }
             var restoranlar = await _context.Restoranlar
                 .Include(r => r.SahipKullanici)
                 .OrderByDescending(r => r.RestoranId)
@@ -201,13 +204,32 @@ namespace YemekSiparisApp.Controllers
         //  KULLANICI CRUD
         // ══════════════════════════════════════════════════════════════════════
 
-        // READ - Tüm kullanıcıları listele
-        // GET: /Admin/Kullanicilar
-        public async Task<IActionResult> Kullanicilar()
+        // READ - Tüm kullanıcıları listele (rol filtresi opsiyonel)
+        // GET: /Admin/Kullanicilar?rol=Musteri
+        public async Task<IActionResult> Kullanicilar(string? rol)
         {
-            var kullanicilar = await _context.Kullanicilar
+            try { ViewBag.BekleyenBasvuruSayisi = await _context.AskidaYemekBasvurulari.CountAsync(b => b.Durum == "Beklemede"); } catch { ViewBag.BekleyenBasvuruSayisi = 0; }
+            try { ViewBag.BekleyenSiparisSayisi = await _context.Siparisler.CountAsync(s => s.Durum == "AskidaOnayBekliyor"); } catch { ViewBag.BekleyenSiparisSayisi = 0; }
+            var query = _context.Kullanicilar.AsQueryable();
+
+            // Rol filtresi
+            if (!string.IsNullOrEmpty(rol))
+            {
+                query = query.Where(k => k.Rol == rol);
+            }
+
+            var kullanicilar = await query
                 .OrderByDescending(k => k.KullaniciId)
                 .ToListAsync();
+
+            ViewBag.AktifRol = rol;
+
+            // Sayıları ViewBag'e ekle
+            ViewBag.ToplamMusteri = await _context.Kullanicilar.CountAsync(k => k.Rol == "Musteri");
+            ViewBag.ToplamRestoranSahibi = await _context.Kullanicilar.CountAsync(k => k.Rol == "RestoranSahibi");
+            ViewBag.ToplamKurye = await _context.Kullanicilar.CountAsync(k => k.Rol == "Kurye");
+            ViewBag.ToplamAdmin = await _context.Kullanicilar.CountAsync(k => k.Rol == "Admin");
+
             return View(kullanicilar);
         }
 
@@ -415,6 +437,116 @@ namespace YemekSiparisApp.Controllers
                 .OrderByDescending(h => h.ToplamBakiye)
                 .ToListAsync();
             return View(havuzlar);
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  ASKIDA YEMEK BAŞVURULARI
+        // ══════════════════════════════════════════════════════════════════════
+
+        // GET: /Admin/Basvurular
+        public async Task<IActionResult> Basvurular(string? durum)
+        {
+            try { ViewBag.BekleyenBasvuruSayisi = await _context.AskidaYemekBasvurulari.CountAsync(b => b.Durum == "Beklemede"); } catch { ViewBag.BekleyenBasvuruSayisi = 0; }
+            var query = _context.AskidaYemekBasvurulari
+                .Include(b => b.Kullanici)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(durum))
+                query = query.Where(b => b.Durum == durum);
+
+            var basvurular = await query
+                .OrderByDescending(b => b.BasvuruTarihi)
+                .ToListAsync();
+
+            ViewBag.AktifDurum = durum;
+            ViewBag.BeklemedeCount = await _context.AskidaYemekBasvurulari.CountAsync(b => b.Durum == "Beklemede");
+            ViewBag.OnaylandiCount = await _context.AskidaYemekBasvurulari.CountAsync(b => b.Durum == "Onaylandi");
+            ViewBag.ReddedildiCount = await _context.AskidaYemekBasvurulari.CountAsync(b => b.Durum == "Reddedildi");
+
+            return View(basvurular);
+        }
+
+        // GET: /Admin/AskidaTalepler
+        public async Task<IActionResult> AskidaTalepler()
+        {
+            try { ViewBag.BekleyenBasvuruSayisi = await _context.AskidaYemekBasvurulari.CountAsync(b => b.Durum == "Beklemede"); } catch { ViewBag.BekleyenBasvuruSayisi = 0; }
+            try { ViewBag.BekleyenSiparisSayisi = await _context.Siparisler.CountAsync(s => s.Durum == "AskidaOnayBekliyor"); } catch { ViewBag.BekleyenSiparisSayisi = 0; }
+            
+            var talepler = await _context.Siparisler
+                .Include(s => s.MusteriKullanici)
+                .Include(s => s.Restoran)
+                .Where(s => s.Durum == "AskidaOnayBekliyor")
+                .OrderByDescending(s => s.OlusturulmaTarihi)
+                .ToListAsync();
+
+            return View(talepler);
+        }
+
+        // POST: /Admin/AskidaSiparisOnayla
+        [HttpPost]
+        public async Task<IActionResult> AskidaSiparisOnayla(int id)
+        {
+            var siparis = await _context.Siparisler
+                .Include(s => s.MusteriKullanici)
+                .FirstOrDefaultAsync(s => s.SiparisId == id && s.Durum == "AskidaOnayBekliyor");
+
+            if (siparis == null) return NotFound();
+
+            // 1. Havuzu Bul (Önce restoranın kendi havuzu, yoksa genel havuz)
+            var havuz = await _context.AskidaYemekHavuzlari
+                .FirstOrDefaultAsync(h => h.RestoranId == siparis.RestoranId && h.IsActive)
+                ?? await _context.AskidaYemekHavuzlari
+                    .FirstOrDefaultAsync(h => h.RestoranId == null && h.IsActive);
+
+            if (havuz == null || havuz.ToplamBakiye < siparis.ToplamTutar)
+            {
+                TempData["Hata"] = "Havuzda yeterli bakiye bulunamadığı için bu sipariş onaylanamadı.";
+                return RedirectToAction(nameof(AskidaTalepler));
+            }
+
+            // 2. Siparişi aktif et (Restorana gönder)
+            siparis.Durum = "Beklemede";
+            siparis.MusteriKullanici.IsIhtiyacSahibi = true;
+
+            // 3. Kullanım kaydı oluştur (Trigger bakiyeyi otomatik düşürür)
+            var kullanim = new AskidaYemekKullanim
+            {
+                KullaniciId = siparis.MusteriKullaniciId,
+                SiparisId = siparis.SiparisId,
+                HavuzId = havuz.HavuzId, // Bu eksik olduğunda hata veriyordu
+                KullanilanMiktar = siparis.ToplamTutar,
+                KullanimTarihi = DateTime.Now,
+                Aciklama = "Admin onaylı Askıda Sipariş"
+            };
+            _context.AskidaYemekKullanimlari.Add(kullanim);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                TempData["Mesaj"] = "Sipariş onaylandı, bakiyeden düşüldü ve restorana iletildi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Hata"] = "Kaydedilirken bir hata oluştu: " + (ex.InnerException?.Message ?? ex.Message);
+            }
+
+            return RedirectToAction(nameof(AskidaTalepler));
+        }
+
+        // POST: /Admin/AskidaSiparisReddet
+        [HttpPost]
+        public async Task<IActionResult> AskidaSiparisReddet(int id)
+        {
+            var siparis = await _context.Siparisler
+                .FirstOrDefaultAsync(s => s.SiparisId == id && s.Durum == "AskidaOnayBekliyor");
+
+            if (siparis == null) return NotFound();
+
+            siparis.Durum = "Iptal";
+            await _context.SaveChangesAsync();
+
+            TempData["Mesaj"] = "Talep reddedildi, sipariş iptal edildi.";
+            return RedirectToAction(nameof(AskidaTalepler));
         }
 
         // ══════════════════════════════════════════════════════════════════════

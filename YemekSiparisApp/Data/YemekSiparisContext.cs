@@ -19,6 +19,7 @@ namespace YemekSiparisApp.Data
         public DbSet<AskidaYemekHavuzu> AskidaYemekHavuzlari { get; set; }
         public DbSet<AskidaYemekBagis> AskidaYemekBagislari { get; set; }
         public DbSet<AskidaYemekKullanim> AskidaYemekKullanimlari { get; set; }
+        public DbSet<AskidaYemekBasvuru> AskidaYemekBasvurulari { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -89,7 +90,7 @@ namespace YemekSiparisApp.Data
                 // CHECK: ToplamTutar > 0
                 entity.HasCheckConstraint("CK_Siparisler_ToplamTutar", "ToplamTutar > 0");
                 entity.HasCheckConstraint("CK_Siparisler_Durum",
-                    "Durum IN ('Beklemede','Onaylandi','Hazirlaniyor','YoldaKurye','TeslimEdildi','Iptal')");
+                    "Durum IN ('Beklemede','Onaylandi','Hazirlaniyor','YoldaKurye','TeslimEdildi','Iptal','AskidaOnayBekliyor')");
 
                 entity.HasOne(s => s.MusteriKullanici)
                       .WithMany(k => k.Siparisler)
@@ -174,6 +175,19 @@ namespace YemekSiparisApp.Data
                       .WithMany(h => h.Kullanimlar)
                       .HasForeignKey(ku => ku.HavuzId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ── ASKIDA YEMEK BAŞVURU ──────────────────────────────────────
+            modelBuilder.Entity<AskidaYemekBasvuru>(entity =>
+            {
+                entity.ToTable("AskidaYemekBasvurulari");
+                entity.HasCheckConstraint("CK_Basvuru_Durum",
+                    "Durum IN ('Beklemede','Onaylandi','Reddedildi')");
+
+                entity.HasOne(b => b.Kullanici)
+                      .WithMany()
+                      .HasForeignKey(b => b.KullaniciId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

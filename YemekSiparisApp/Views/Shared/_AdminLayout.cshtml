@@ -74,6 +74,40 @@
         .badge-danger { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
         .badge-info { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
 
+        /* ── Sidebar Dropdown / Submenu ─────────────────────────── */
+        .admin-menu-dropdown .admin-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+        .admin-menu-dropdown.open .admin-submenu {
+            max-height: 300px;
+            opacity: 1;
+        }
+        .admin-menu-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        .admin-submenu-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 24px 9px 56px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.88rem; font-weight: 500;
+            transition: var(--transition);
+            border-left: 2px solid transparent;
+        }
+        .admin-submenu-item:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.03);
+            border-left-color: rgba(255,90,31,0.3);
+        }
+        .admin-submenu-item.active {
+            color: var(--primary);
+            background: rgba(255,90,31,0.08);
+            border-left-color: var(--primary);
+        }
+
     </style>
 </head>
 <body>
@@ -92,6 +126,10 @@
                 </div>
             </div>
 
+            @{
+                var isKullaniciPage = ViewContext.RouteData.Values["Action"]?.ToString() == "Kullanicilar";
+                var currentRol = ViewContext.HttpContext.Request.Query["rol"].ToString();
+            }
             <div class="admin-menu">
                 @if (User.IsInRole("Admin"))
                 {
@@ -101,11 +139,42 @@
                     <a asp-controller="Admin" asp-action="Restoranlar" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Restoranlar" ? "active" : "")">
                         <i class="fa fa-store" style="width:20px;"></i> Restoranlar
                     </a>
-                    <a asp-controller="Admin" asp-action="Kullanicilar" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Kullanicilar" ? "active" : "")">
-                        <i class="fa fa-users" style="width:20px;"></i> Kullanıcılar
-                    </a>
+                    <div class="admin-menu-dropdown @(isKullaniciPage ? "open" : "")">
+                        <a href="javascript:void(0)" class="admin-menu-item @(isKullaniciPage ? "active" : "")" onclick="toggleDropdown(this)">
+                            <i class="fa fa-users" style="width:20px;"></i> Kullanıcılar
+                            <i class="fa fa-chevron-down dropdown-arrow" style="margin-left:auto; font-size:0.7rem; transition: transform 0.3s;"></i>
+                        </a>
+                        <div class="admin-submenu">
+                            <a asp-controller="Admin" asp-action="Kullanicilar" class="admin-submenu-item @(isKullaniciPage && string.IsNullOrEmpty(currentRol) ? "active" : "")">
+                                <i class="fa fa-list" style="width:16px; font-size:0.75rem;"></i> Tüm Kullanıcılar
+                            </a>
+                            <a asp-controller="Admin" asp-action="Kullanicilar" asp-route-rol="Musteri" class="admin-submenu-item @(currentRol == "Musteri" ? "active" : "")">
+                                <i class="fa fa-user" style="width:16px; font-size:0.75rem; color:#93c5fd;"></i> Müşteriler
+                            </a>
+                            <a asp-controller="Admin" asp-action="Kullanicilar" asp-route-rol="RestoranSahibi" class="admin-submenu-item @(currentRol == "RestoranSahibi" ? "active" : "")">
+                                <i class="fa fa-utensils" style="width:16px; font-size:0.75rem; color:#fcd34d;"></i> Restoran Sahipleri
+                            </a>
+                            <a asp-controller="Admin" asp-action="Kullanicilar" asp-route-rol="Kurye" class="admin-submenu-item @(currentRol == "Kurye" ? "active" : "")">
+                                <i class="fa fa-motorcycle" style="width:16px; font-size:0.75rem; color:#6ee7b7;"></i> Kuryeler
+                            </a>
+                            <a asp-controller="Admin" asp-action="Kullanicilar" asp-route-rol="Admin" class="admin-submenu-item @(currentRol == "Admin" ? "active" : "")">
+                                <i class="fa fa-shield-halved" style="width:16px; font-size:0.75rem; color:#fca5a5;"></i> Adminler
+                            </a>
+                        </div>
+                    </div>
                     <a asp-controller="Admin" asp-action="AskidaYemek" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "AskidaYemek" ? "active" : "")">
                         <i class="fa fa-heart" style="width:20px; color: var(--accent);"></i> Askıda Yemek
+                    </a>
+                    <a asp-controller="Admin" asp-action="AskidaTalepler" class="admin-menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "AskidaTalepler" ? "active" : "")"
+                        style="justify-content: space-between;">
+                        <span><i class="fa fa-hand-holding-heart" style="width:20px; color:#6ee7b7;"></i> Askıda Siparişler</span>
+                        @{
+                            int siparisSayisi = 0;
+                            try { siparisSayisi = (int)(ViewBag.BekleyenSiparisSayisi ?? 0); } catch {}
+                        }
+                        @if (siparisSayisi > 0) {
+                            <span style="background:#10b981; color:white; border-radius:10px; padding:2px 8px; font-size:0.72rem; font-weight:800;">@siparisSayisi</span>
+                        }
                     </a>
                 }
                 else if (User.IsInRole("RestoranSahibi"))
@@ -155,6 +224,12 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function toggleDropdown(el) {
+            var dropdown = el.closest('.admin-menu-dropdown');
+            dropdown.classList.toggle('open');
+        }
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

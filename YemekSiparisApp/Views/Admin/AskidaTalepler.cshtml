@@ -1,0 +1,120 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.Siparis>
+@{
+    ViewData["Title"] = "Askıda Yemek Talepleri";
+}
+
+<style>
+    .talep-card {
+        background: var(--bg-card); border: 1.5px solid var(--border);
+        border-radius: 16px; margin-bottom: 20px; overflow: hidden;
+        transition: var(--transition);
+    }
+    .talep-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+    .talep-header {
+        padding: 16px 20px; background: rgba(255,255,255,0.02);
+        border-bottom: 1px solid var(--border);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .talep-body { padding: 20px; }
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .user-avatar {
+        width: 44px; height: 44px; border-radius: 12px;
+        background: var(--primary); color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.2rem;
+    }
+    .order-price { font-size: 1.4rem; font-weight: 800; color: #6ee7b7; }
+    
+    .btn-approve {
+        padding: 10px 20px; border-radius: 10px; border: none;
+        background: #10b981; color: white; font-weight: 700;
+        cursor: pointer; transition: 0.2s;
+    }
+    .btn-approve:hover { background: #059669; transform: scale(1.05); }
+    
+    .btn-reject {
+        padding: 10px 20px; border-radius: 10px; border: 1.5px solid #ef4444;
+        background: transparent; color: #fca5a5; font-weight: 700;
+        cursor: pointer; transition: 0.2s;
+    }
+    .btn-reject:hover { background: rgba(239,68,68,0.1); }
+</style>
+
+<div style="margin-bottom: 30px;">
+    <h2 style="margin:0; color:var(--text-primary); display:flex; align-items:center; gap:12px;">
+        <i class="fa fa-hand-holding-heart" style="color:#fcd34d;"></i> Askıda Yemek Sipariş Talepleri
+    </h2>
+    <p style="color:var(--text-muted); margin-top:8px;">İhtiyaç sahipleri tarafından oluşturulan ve onay bekleyen ücretsiz yemek talepleri.</p>
+</div>
+
+@if (TempData["Mesaj"] != null) {
+    <div style="padding:15px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); color:#6ee7b7; border-radius:12px; margin-bottom:20px;">
+        <i class="fa fa-check-circle"></i> @TempData["Mesaj"]
+    </div>
+}
+@if (TempData["Hata"] != null) {
+    <div style="padding:15px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#fca5a5; border-radius:12px; margin-bottom:20px;">
+        <i class="fa fa-exclamation-triangle"></i> @TempData["Hata"]
+    </div>
+}
+
+<div class="talepler-container">
+    @if (!Model.Any()) {
+        <div style="text-align:center; padding:60px 20px; background:var(--bg-card); border-radius:20px; border:2px dashed var(--border);">
+            <i class="fa fa-mug-hot" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:20px;"></i>
+            <h3 style="color:var(--text-muted);">Şu an onay bekleyen talep bulunmuyor.</h3>
+        </div>
+    }
+
+    @foreach (var s in Model) {
+        <div class="talep-card">
+            <div class="talep-header">
+                <div class="user-info">
+                    <div class="user-avatar">@s.MusteriKullanici.Ad[0]</div>
+                    <div>
+                        <div style="font-weight:700; color:var(--text-primary);">@s.MusteriKullanici.Ad @s.MusteriKullanici.Soyad</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">@s.MusteriKullanici.Email</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Talep Zamanı</div>
+                    <div style="font-weight:600; color:var(--text-primary);">@s.OlusturulmaTarihi.ToString("HH:mm") <span style="font-size:0.8rem; opacity:0.6;">(@s.OlusturulmaTarihi.ToString("dd.MM.yyyy"))</span></div>
+                </div>
+            </div>
+            
+            <div class="talep-body">
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:30px; align-items:center;">
+                    <div>
+                        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">Restoran</div>
+                        <div style="font-weight:700; color:var(--accent); font-size:1.1rem; margin-bottom:12px;">@s.Restoran.Ad</div>
+                        
+                        <div style="padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--border);">
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Teslimat Adresi:</div>
+                            <div style="font-size:0.9rem; line-height:1.4;">@s.TeslimatAdresi</div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align:center; border-left:1px solid var(--border); padding-left:30px;">
+                        <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:4px;">Toplam Tutar</div>
+                        <div class="order-price">₺@s.ToplamTutar.ToString("N2")</div>
+                        
+                        <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
+                            <form asp-action="AskidaSiparisOnayla" method="post">
+                                <input type="hidden" name="id" value="@s.SiparisId" />
+                                <button type="submit" class="btn-approve" style="width:100%;">
+                                    <i class="fa fa-check"></i> Onayla & Gönder
+                                </button>
+                            </form>
+                            <form asp-action="AskidaSiparisReddet" method="post">
+                                <input type="hidden" name="id" value="@s.SiparisId" />
+                                <button type="submit" class="btn-reject" style="width:100%;">
+                                    <i class="fa fa-times"></i> Talebi Reddet
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

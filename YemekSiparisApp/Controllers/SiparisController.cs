@@ -15,6 +15,7 @@ namespace YemekSiparisApp.Controllers
     {
         private readonly YemekSiparisContext _context;
         private const string SepetSessionKey = "KullaniciSepeti";
+        private const decimal AylikAskidaYemekLimiti = 500m; // TL
 
         public SiparisController(YemekSiparisContext context)
         {
@@ -27,54 +28,96 @@ namespace YemekSiparisApp.Controllers
         }
 
         // GET: /Siparis/Onay
+        [Authorize(Roles = "Musteri")]
         public async Task<IActionResult> Onay()
         {
+            if (User.IsInRole("Kurye") || User.IsInRole("Admin") || User.IsInRole("RestoranSahibi"))
+            {
+                TempData["Hata"] = "Sadece Müşteri hesabı ile sipariş verebilirsiniz.";
+                return RedirectToAction("Index", "Home");
+            }
+            
             var sepet = SepetiGetir();
             if (!sepet.Any())
-            {
                 return RedirectToAction("Index", "Restoran");
-            }
 
             var model = new SiparisOnayViewModel
             {
                 Sepet = new SepetViewModel { Olgeler = sepet }
             };
 
-            // Kullanıcının kayıtlı adresini çek (varsa)
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
             {
                 var user = await _context.Kullanicilar.FindAsync(userId);
                 model.TeslimatAdresi = user?.Adres ?? "";
+
+                // Askıda Yemek uygunluk kontrolü
+                if (user?.IsIhtiyacSahibi == true)
+                {
+                    var restoranId = sepet.First().RestoranId;
+                    var havuz = await _context.AskidaYemekHavuzlari
+                        .FirstOrDefaultAsync(h => h.RestoranId == restoranId && h.IsActive)
+                        ?? await _context.AskidaYemekHavuzlari
+                            .FirstOrDefaultAsync(h => h.RestoranId == null && h.IsActive);
+
+                    // Bu ay ne kadar kullandı?
+                    var ayBasi = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                    var buAyKullanim = await _context.AskidaYemekKullanimlari
+                        .Where(k => k.KullaniciId == userId && k.KullanimTarihi >= ayBasi)
+                        .SumAsync(k => (decimal?)k.KullanilanMiktar) ?? 0;
+
+                    model.KullaniciIhtiyacSahibi = true;
+                    model.KalanAylikLimit = Math.Max(0, AylikAskidaYemekLimiti - buAyKullanim);
+                    model.HavuzYeterliBakiye = havuz != null
+                        && havuz.ToplamBakiye >= model.Sepet.GenelToplam
+                        && model.KalanAylikLimit >= model.Sepet.GenelToplam;
+                }
             }
 
             return View(model);
         }
 
         // POST: /Siparis/Onay
+        [Authorize(Roles = "Musteri")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Onay(SiparisOnayViewModel model)
         {
+            if (User.IsInRole("Kurye") || User.IsInRole("Admin") || User.IsInRole("RestoranSahibi"))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             var sepet = SepetiGetir();
             if (!sepet.Any()) return RedirectToAction("Index", "Restoran");
 
             var sepetVm = new SepetViewModel { Olgeler = sepet };
-            if (!ModelState.IsValid)
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var isAskida = model.AskidaYemekKullan;
+
+            // 1. SINIR KONTROLÜ (Aylık Maksimum 500 TL limit)
+            if (isAskida)
             {
-                model.Sepet = sepetVm;
-                return View(model);
+                var ayBasi = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                var buAyKullanim = await _context.AskidaYemekKullanimlari
+                    .Where(k => k.KullaniciId == userId && k.KullanimTarihi >= ayBasi)
+                    .SumAsync(k => (decimal?)k.KullanilanMiktar) ?? 0;
+
+                if (buAyKullanim + sepetVm.GenelToplam > 500)
+                {
+                    ModelState.AddModelError("", "Aylık Askıda Yemek limitiniz (₺500.00) dolmuştur. Bu siparişi normal ödeme ile verebilirsiniz.");
+                    model.Sepet = sepetVm;
+                    return View(model);
+                }
             }
 
-            // Siparişi Oluştur
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var restoranId = sepet.First().RestoranId;
-
+            // 2. SİPARİŞİ OLUŞTUR
             var yeniSiparis = new Siparis
             {
                 MusteriKullaniciId = userId,
-                RestoranId = restoranId,
-                Durum = "Beklemede",
+                RestoranId = sepet.First().RestoranId,
+                Durum = isAskida ? "AskidaOnayBekliyor" : "Beklemede",
                 ToplamTutar = sepetVm.GenelToplam,
                 TeslimatUcreti = sepetVm.TeslimatUcreti,
                 TeslimatAdresi = model.TeslimatAdresi,
@@ -92,35 +135,32 @@ namespace YemekSiparisApp.Controllers
                 });
             }
 
-            _context.Siparisler.Add(yeniSiparis);
-            await _context.SaveChangesAsync(); // SiparisId alır
-
-            // Eğer Askıda Yemek destek seçeneği işaretlendiyse
-            if (model.AskidaYemekDestegiTutari > 0)
+            try
             {
-                // Mevcut restoranın havuzunu bul
-                var havuz = await _context.AskidaYemekHavuzlari.FirstOrDefaultAsync(h => h.RestoranId == restoranId && h.IsActive) 
-                            ?? await _context.AskidaYemekHavuzlari.FirstOrDefaultAsync(h => h.RestoranId == null && h.IsActive);
-                
-                if (havuz != null)
+                _context.Siparisler.Add(yeniSiparis);
+                await _context.SaveChangesAsync();
+
+                // 3. BAĞIŞ SİSTEMİ (Eğer kullanıcı bağış yaptıysa)
+                if (!isAskida && model.AskidaYemekDestegiTutari > 0)
                 {
-                    var bagis = new AskidaYemekBagis
+                    var havuz = await _context.AskidaYemekHavuzlari.FirstOrDefaultAsync(h => h.IsActive);
+                    if (havuz != null)
                     {
-                        HavuzId = havuz.HavuzId,
-                        BagisciKullaniciId = userId,
-                        Miktar = model.AskidaYemekDestegiTutari,
-                        IsAnonim = false, // Veya formdan alınabilir
-                        BagisTarihi = DateTime.Now
-                    };
-                    _context.AskidaYemekBagislari.Add(bagis);
-                    await _context.SaveChangesAsync();
+                        havuz.ToplamBakiye += model.AskidaYemekDestegiTutari;
+                        await _context.SaveChangesAsync();
+                    }
                 }
+
+                HttpContext.Session.Remove(SepetSessionKey);
+                TempData["Mesaj"] = isAskida ? "Askıda yemek talebiniz alındı, admin onayı bekleniyor." : "Siparişiniz başarıyla alındı!";
+                return RedirectToAction("Takip", new { id = yeniSiparis.SiparisId });
             }
-
-            // Sepeti boşalt
-            HttpContext.Session.Remove(SepetSessionKey);
-
-            return RedirectToAction("Takip", new { id = yeniSiparis.SiparisId });
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Hata: " + (ex.InnerException?.Message ?? ex.Message));
+                model.Sepet = sepetVm;
+                return View(model);
+            }
         }
 
         // GET: /Siparis/Takip/5

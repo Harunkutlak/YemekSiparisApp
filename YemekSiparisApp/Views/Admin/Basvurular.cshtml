@@ -1,0 +1,177 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.AskidaYemekBasvuru>
+@{
+    ViewData["Title"] = "Askıda Yemek Başvuruları";
+    var aktifDurum = ViewBag.AktifDurum as string;
+}
+
+<style>
+    .basvuru-tabs { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .basvuru-tab {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 18px; border-radius: 10px;
+        border: 1.5px solid var(--border); background: var(--bg-card);
+        color: var(--text-muted); font-size: 0.88rem; font-weight: 600;
+        text-decoration: none; transition: var(--transition);
+    }
+    .basvuru-tab:hover { border-color: var(--primary); color: var(--text-primary); }
+    .basvuru-tab.active { border-color: var(--primary); background: rgba(255,90,31,0.08); color: var(--primary); }
+    .basvuru-tab .cnt {
+        padding: 2px 8px; border-radius: 10px;
+        font-size: 0.75rem; font-weight: 800;
+        background: rgba(255,255,255,0.06);
+    }
+    .tab-beklemede .cnt { background: rgba(245,158,11,0.15); color: #fcd34d; }
+    .tab-onaylandi .cnt { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .tab-reddedildi .cnt { background: rgba(239,68,68,0.15); color: #fca5a5; }
+
+    .not-input {
+        width: 100%; padding: 8px 10px; border-radius: 8px;
+        border: 1.5px solid var(--border); background: var(--bg-card2);
+        color: var(--text-primary); font-size: 0.85rem; outline: none;
+        resize: none;
+        transition: border-color 0.2s;
+    }
+    .not-input:focus { border-color: var(--primary); }
+
+    .btn-onayla {
+        padding: 7px 14px; border-radius: 8px; border: none;
+        background: rgba(16,185,129,0.15); color: #6ee7b7;
+        font-size: 0.82rem; font-weight: 600; cursor: pointer;
+        transition: var(--transition);
+    }
+    .btn-onayla:hover { background: rgba(16,185,129,0.3); }
+    .btn-reddet {
+        padding: 7px 14px; border-radius: 8px; border: none;
+        background: rgba(239,68,68,0.12); color: #fca5a5;
+        font-size: 0.82rem; font-weight: 600; cursor: pointer;
+        transition: var(--transition);
+    }
+    .btn-reddet:hover { background: rgba(239,68,68,0.25); }
+
+    .basvuru-notu {
+        font-size: 0.85rem; color: var(--text-muted);
+        font-style: italic; max-width: 260px;
+        white-space: normal; line-height: 1.4;
+    }
+    .admin-notu {
+        font-size: 0.8rem; color: var(--text-muted);
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border);
+        border-radius: 6px; padding: 5px 8px;
+        max-width: 220px;
+    }
+</style>
+
+@if (TempData["Mesaj"] != null) {
+    <div style="padding:14px 18px; margin-bottom:20px; border-radius:10px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#6ee7b7;">
+        <i class="fa fa-check-circle" style="margin-right:8px;"></i>@TempData["Mesaj"]
+    </div>
+}
+
+<!-- Filtre Tabları -->
+<div class="basvuru-tabs">
+    <a asp-action="Basvurular" class="basvuru-tab @(string.IsNullOrEmpty(aktifDurum) ? "active" : "")">
+        <i class="fa fa-list"></i> Tümü
+        <span class="cnt">@Model.Count()</span>
+    </a>
+    <a asp-action="Basvurular" asp-route-durum="Beklemede" class="basvuru-tab tab-beklemede @(aktifDurum == "Beklemede" ? "active" : "")">
+        <i class="fa fa-clock"></i> Beklemede
+        <span class="cnt">@ViewBag.BeklemedeCount</span>
+    </a>
+    <a asp-action="Basvurular" asp-route-durum="Onaylandi" class="basvuru-tab tab-onaylandi @(aktifDurum == "Onaylandi" ? "active" : "")">
+        <i class="fa fa-check"></i> Onaylandı
+        <span class="cnt">@ViewBag.OnaylandiCount</span>
+    </a>
+    <a asp-action="Basvurular" asp-route-durum="Reddedildi" class="basvuru-tab tab-reddedildi @(aktifDurum == "Reddedildi" ? "active" : "")">
+        <i class="fa fa-times"></i> Reddedildi
+        <span class="cnt">@ViewBag.ReddedildiCount</span>
+    </a>
+</div>
+
+<!-- Tablo -->
+<div class="card">
+    <table class="action-table">
+        <thead>
+            <tr>
+                <th>Kullanıcı</th>
+                <th>E-posta</th>
+                <th>Başvuru Notu</th>
+                <th>Tarih</th>
+                <th>Durum</th>
+                <th>Admin Notu / İşlem</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any()) {
+                <tr>
+                    <td colspan="6" style="text-align:center; color:var(--text-muted); padding:40px;">
+                        <i class="fa fa-inbox" style="font-size:2rem; display:block; margin-bottom:12px; opacity:0.4;"></i>
+                        Bu kategoride başvuru bulunmuyor.
+                    </td>
+                </tr>
+            }
+            @foreach (var b in Model) {
+                <tr>
+                    <td>
+                        <strong>@b.Kullanici.Ad @b.Kullanici.Soyad</strong>
+                        @if (b.Kullanici.IsIhtiyacSahibi) {
+                            <span class="badge badge-success" style="margin-left:6px; font-size:0.7rem;">✓ Onaylı</span>
+                        }
+                    </td>
+                    <td style="font-size:0.85rem; color:var(--text-muted);">@b.Kullanici.Email</td>
+                    <td>
+                        <div class="basvuru-notu">
+                            @(string.IsNullOrEmpty(b.BasvuruNotu) ? "—" : b.BasvuruNotu)
+                        </div>
+                    </td>
+                    <td style="font-size:0.82rem; color:var(--text-muted);">
+                        @b.BasvuruTarihi.ToString("dd.MM.yyyy HH:mm")
+                        @if (b.IslemTarihi.HasValue) {
+                            <div style="margin-top:3px; font-size:0.75rem;">İşlem: @b.IslemTarihi.Value.ToString("dd.MM.yyyy")</div>
+                        }
+                    </td>
+                    <td>
+                        @if (b.Durum == "Beklemede") {
+                            <span class="badge badge-warning">⏳ Beklemede</span>
+                        } else if (b.Durum == "Onaylandi") {
+                            <span class="badge badge-success">✅ Onaylandı</span>
+                        } else {
+                            <span class="badge badge-danger">❌ Reddedildi</span>
+                        }
+                    </td>
+                    <td>
+                        @if (b.Durum == "Beklemede") {
+                            <div style="display:flex; flex-direction:column; gap:8px; min-width:220px;">
+                                <textarea class="not-input" rows="2" id="not_@b.BasvuruId" placeholder="Admin notu (opsiyonel)..."></textarea>
+                                <div style="display:flex; gap:8px;">
+                                    <form method="post" asp-action="BasvuruOnayla" style="flex:1;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@b.BasvuruId" />
+                                        <input type="hidden" name="adminNotu" id="notOnayla_@b.BasvuruId" />
+                                        <button type="submit" class="btn-onayla" style="width:100%;"
+                                            onclick="document.getElementById('notOnayla_@b.BasvuruId').value=document.getElementById('not_@b.BasvuruId').value">
+                                            <i class="fa fa-check"></i> Onayla
+                                        </button>
+                                    </form>
+                                    <form method="post" asp-action="BasvuruReddet" style="flex:1;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@b.BasvuruId" />
+                                        <input type="hidden" name="adminNotu" id="notReddet_@b.BasvuruId" />
+                                        <button type="submit" class="btn-reddet" style="width:100%;"
+                                            onclick="document.getElementById('notReddet_@b.BasvuruId').value=document.getElementById('not_@b.BasvuruId').value">
+                                            <i class="fa fa-times"></i> Reddet
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        } else {
+                            <div class="admin-notu">
+                                @(string.IsNullOrEmpty(b.AdminNotu) ? "Not girilmedi" : b.AdminNotu)
+                            </div>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

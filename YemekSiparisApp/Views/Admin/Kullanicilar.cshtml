@@ -1,7 +1,96 @@
 @model IEnumerable<YemekSiparisApp.Models.Entities.Kullanici>
 @{
-    ViewData["Title"] = "Kullanıcı Yönetimi";
+    var aktifRol = ViewBag.AktifRol as string;
+    var pageTitle = aktifRol switch {
+        "Musteri" => "Müşteri Yönetimi",
+        "RestoranSahibi" => "Restoran Sahipleri",
+        "Kurye" => "Kurye Yönetimi",
+        "Admin" => "Admin Yönetimi",
+        _ => "Kullanıcı Yönetimi"
+    };
+    ViewData["Title"] = pageTitle;
 }
+
+<style>
+    /* ── Stat Filter Cards ─────────────────────────────────────── */
+    .role-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .role-stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex; align-items: center; gap: 14px;
+        text-decoration: none;
+        transition: var(--transition);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    .role-stat-card::before {
+        content: '';
+        position: absolute; left: 0; top: 0; bottom: 0;
+        width: 3px; border-radius: 0 4px 4px 0;
+        transition: var(--transition);
+    }
+    .role-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+    .role-stat-card.active { border-color: var(--primary); }
+    .role-stat-card.active::before { background: var(--primary); }
+
+    .role-stat-card.musteri::before { background: #3b82f6; }
+    .role-stat-card.restoran::before { background: #f59e0b; }
+    .role-stat-card.kurye::before { background: #10b981; }
+    .role-stat-card.admin-card::before { background: #ef4444; }
+
+    .role-stat-icon {
+        width: 42px; height: 42px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem;
+    }
+    .role-stat-icon.musteri { background: rgba(59,130,246,0.12); color: #93c5fd; }
+    .role-stat-icon.restoran { background: rgba(245,158,11,0.12); color: #fcd34d; }
+    .role-stat-icon.kurye { background: rgba(16,185,129,0.12); color: #6ee7b7; }
+    .role-stat-icon.admin-icon { background: rgba(239,68,68,0.12); color: #fca5a5; }
+
+    .role-stat-info h4 { font-size: 0.78rem; color: var(--text-muted); margin: 0 0 4px 0; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .role-stat-info .count { font-size: 1.4rem; font-weight: 800; color: var(--text-primary); }
+</style>
+
+<!-- ═══ Rol Filtre Kartları ═══ -->
+<div class="role-stats">
+    <a asp-action="Kullanicilar" asp-route-rol="Musteri" class="role-stat-card musteri @(aktifRol == "Musteri" ? "active" : "")">
+        <div class="role-stat-icon musteri"><i class="fa fa-user"></i></div>
+        <div class="role-stat-info">
+            <h4>Müşteriler</h4>
+            <div class="count">@ViewBag.ToplamMusteri</div>
+        </div>
+    </a>
+    <a asp-action="Kullanicilar" asp-route-rol="RestoranSahibi" class="role-stat-card restoran @(aktifRol == "RestoranSahibi" ? "active" : "")">
+        <div class="role-stat-icon restoran"><i class="fa fa-utensils"></i></div>
+        <div class="role-stat-info">
+            <h4>Restoran Sahipleri</h4>
+            <div class="count">@ViewBag.ToplamRestoranSahibi</div>
+        </div>
+    </a>
+    <a asp-action="Kullanicilar" asp-route-rol="Kurye" class="role-stat-card kurye @(aktifRol == "Kurye" ? "active" : "")">
+        <div class="role-stat-icon kurye"><i class="fa fa-motorcycle"></i></div>
+        <div class="role-stat-info">
+            <h4>Kuryeler</h4>
+            <div class="count">@ViewBag.ToplamKurye</div>
+        </div>
+    </a>
+    <a asp-action="Kullanicilar" asp-route-rol="Admin" class="role-stat-card admin-card @(aktifRol == "Admin" ? "active" : "")">
+        <div class="role-stat-icon admin-icon"><i class="fa fa-shield-halved"></i></div>
+        <div class="role-stat-info">
+            <h4>Adminler</h4>
+            <div class="count">@ViewBag.ToplamAdmin</div>
+        </div>
+    </a>
+</div>
 
 <style>
     /* ── Modal Styles ─────────────────────────────────────────── */
@@ -143,14 +232,28 @@
 <div class="card">
     <div class="toolbar">
         <span class="toolbar-title">
-            Toplam <strong>@Model.Count()</strong> kullanıcı kayıtlı
-            <span style="margin-left: 12px; font-size: 0.85rem;">
-                (Aktif: <strong>@Model.Count(k => k.IsActive)</strong> · Pasif: <strong>@Model.Count(k => !k.IsActive)</strong>)
+            @if (!string.IsNullOrEmpty(aktifRol)) {
+                <a asp-action="Kullanicilar" style="color: var(--text-muted); text-decoration: none; font-size:0.85rem; margin-right:10px;">
+                    <i class="fa fa-arrow-left"></i> Tümü
+                </a>
+            }
+            <strong>@Model.Count()</strong> kullanıcı listelendi
+            <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-muted);">
+                (Aktif: <strong style="color: #6ee7b7;">@Model.Count(k => k.IsActive)</strong>
+                · Pasif: <strong style="color: #fca5a5;">@Model.Count(k => !k.IsActive)</strong>)
             </span>
         </span>
-        <button class="btn-add" onclick="openModal('addModal')">
-            <i class="fa fa-user-plus"></i> Yeni Kullanıcı Ekle
-        </button>
+        <div style="display:flex; align-items:center; gap:12px;">
+            @if (!string.IsNullOrEmpty(aktifRol)) {
+                <span class="badge badge-info" style="padding: 6px 12px;">
+                    <i class="fa fa-filter" style="margin-right:5px;"></i>
+                    @(aktifRol == "Musteri" ? "Müşteri" : aktifRol == "RestoranSahibi" ? "Restoran Sahibi" : aktifRol == "Kurye" ? "Kurye" : aktifRol == "Admin" ? "Admin" : aktifRol) filtresi aktif
+                </span>
+            }
+            <button class="btn-add" onclick="openModal('addModal')">
+                <i class="fa fa-user-plus"></i> Yeni Kullanıcı Ekle
+            </button>
+        </div>
     </div>
 
     <table class="action-table">
@@ -160,7 +263,7 @@
                 <th>Ad Soyad</th>
                 <th>E-Posta</th>
                 <th>Telefon</th>
-                <th>Rol</th>
+                @if (string.IsNullOrEmpty(aktifRol)) { <th>Rol</th> }
                 <th>İhtiyaç S.</th>
                 <th>Durum</th>
                 <th>Kayıt</th>
@@ -175,18 +278,20 @@
                     <td style="font-weight: 600;">@k.Ad @k.Soyad</td>
                     <td>@k.Email</td>
                     <td>@k.Telefon</td>
-                    <td>
-                        @{
-                            var rolAdi = k.Rol switch {
-                                "Musteri" => "Müşteri",
-                                "Admin" => "Admin",
-                                "RestoranSahibi" => "Restoran Sahibi",
-                                "Kurye" => "Kurye",
-                                _ => k.Rol
-                            };
-                        }
-                        <span class="role-badge role-@k.Rol">@rolAdi</span>
-                    </td>
+                    @if (string.IsNullOrEmpty(aktifRol)) {
+                        <td>
+                            @{
+                                var rolAdi = k.Rol switch {
+                                    "Musteri" => "Müşteri",
+                                    "Admin" => "Admin",
+                                    "RestoranSahibi" => "Restoran Sahibi",
+                                    "Kurye" => "Kurye",
+                                    _ => k.Rol
+                                };
+                            }
+                            <span class="role-badge role-@k.Rol">@rolAdi</span>
+                        </td>
+                    }
                     <td style="text-align: center;">
                         @if(k.IsIhtiyacSahibi) {
                             <span title="İhtiyaç sahibi olarak doğrulanmış" style="color: #6ee7b7;">✅</span>

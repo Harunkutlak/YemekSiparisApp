@@ -83,8 +83,20 @@ a { text-decoration: none; color: inherit; }
 }
 .nav-links a:hover { color: var(--text-primary); }
 
-.nav-user { display: flex; align-items: center; gap: 12px; }
-.nav-user span { font-size: 0.85rem; color: var(--text-muted); }
+.nav-user-link {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-muted) !important;
+    font-size: 0.85rem; font-weight: 500;
+    transition: var(--transition);
+}
+.nav-user-link:hover {
+    border-color: var(--primary);
+    color: var(--primary) !important;
+    background: rgba(255,90,31,0.06);
+}
+
 
 /* ── Butonlar ─────────────────────────────────────────────────── */
 .btn-primary-sm {

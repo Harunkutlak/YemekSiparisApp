@@ -1,0 +1,122 @@
+@model IEnumerable<YemekSiparisApp.Models.Entities.Siparis>
+@{
+    ViewData["Title"] = "Kurye Paneli";
+    var alinabilir = ViewBag.Alinabilir as IEnumerable<YemekSiparisApp.Models.Entities.Siparis>;
+}
+
+<div class="container section">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <div>
+            <h2 style="font-weight:800; font-size:1.8rem;">🛵 Kurye Paneli</h2>
+            <p style="color:var(--text-muted);">Siparişleri yönetin ve teslimatları tamamlayın.</p>
+        </div>
+        <div style="background:var(--bg-card); padding:10px 20px; border-radius:12px; border:1px solid var(--border);">
+            <span style="color:var(--text-muted); font-size:0.85rem;">Kurye ID:</span> 
+            <strong style="color:var(--primary); margin-right: 15px;">#@ViewBag.KuryeId</strong>
+            <span style="color:var(--text-muted); font-size:0.85rem;">Toplam Teslimat:</span> 
+            <strong style="color:#10b981;">@ViewBag.ToplamTeslimat</strong>
+        </div>
+    </div>
+
+    @if (TempData["Mesaj"] != null)
+    {
+        <div style="padding:15px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); color:#6ee7b7; border-radius:12px; margin-bottom:30px; display:flex; align-items:center; gap:12px;">
+            <span>✅</span> @TempData["Mesaj"]
+        </div>
+    }
+
+    <!-- ÜZERİMDEKİ SİPARİŞLER (AKTİF TESLİMATLAR) -->
+    <div style="margin-bottom:50px;">
+        <h3 style="font-size:1.2rem; margin-bottom:20px; color:var(--accent); display:flex; align-items:center; gap:10px;">
+            <i class="fa fa-shuttle-van"></i> Üzerimdeki Aktif Siparişler (@Model.Count())
+        </h3>
+
+        @if (!Model.Any())
+        {
+            <div style="text-align:center; padding:40px; background:var(--bg-card); border-radius:15px; border:1px dashed var(--border);">
+                <p style="color:var(--text-muted);">Şu an üzerinizde aktif bir teslimat bulunmuyor.</p>
+            </div>
+        }
+        else
+        {
+            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap:20px;">
+                @foreach (var s in Model)
+                {
+                    <div class="card" style="border-left: 5px solid var(--accent);">
+                        <div style="padding:20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:15px;">
+                                <div>
+                                    <h4 style="margin:0;">@s.Restoran.Ad</h4>
+                                    <span style="font-size:0.8rem; color:var(--text-muted);">Sipariş #@s.SiparisId</span>
+                                </div>
+                                <span style="background:rgba(59,130,246,0.1); color:#60a5fa; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:bold;">📍 YOLDA</span>
+                            </div>
+
+                            <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; margin-bottom:20px;">
+                                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">Teslimat Adresi:</p>
+                                <p style="font-size:0.95rem; line-height:1.4;">@s.TeslimatAdresi</p>
+                            </div>
+
+                            <form asp-action="TeslimEt" method="post">
+                                <input type="hidden" name="id" value="@s.SiparisId" />
+                                <button type="submit" class="btn-primary" style="width:100%; padding:10px; border-radius:8px;">
+                                    ✅ Teslimat Tamamlandı
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- ALINABİLİR SİPARİŞLER (HAVUZ) -->
+    <div>
+        <h3 style="font-size:1.2rem; margin-bottom:20px; color:var(--primary); display:flex; align-items:center; gap:10px;">
+            <i class="fa fa-box-open"></i> Hazırlanan / Bekleyen Siparişler (@alinabilir.Count())
+        </h3>
+
+        @if (!alinabilir.Any())
+        {
+            <div style="text-align:center; padding:40px; background:var(--bg-dark); border-radius:15px; border:1px dashed var(--border);">
+                <p style="color:var(--text-muted);">Şu an restoranlarda hazırlanan boştaki bir sipariş bulunmuyor.</p>
+            </div>
+        }
+        else
+        {
+            <div class="card" style="overflow:hidden;">
+                <table style="width:100%; border-collapse: collapse; text-align:left;">
+                    <thead style="background:rgba(255,255,255,0.02); border-bottom:1px solid var(--border);">
+                        <tr>
+                            <th style="padding:15px;">Sipariş</th>
+                            <th style="padding:15px;">Restoran</th>
+                            <th style="padding:15px;">Tutar</th>
+                            <th style="padding:15px; text-align:right;">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in alinabilir)
+                        {
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <td style="padding:15px;">
+                                    <strong>#@s.SiparisId</strong><br/>
+                                    <span style="font-size:0.8rem; color:var(--text-muted);">@s.OlusturulmaTarihi.ToString("HH:mm")</span>
+                                </td>
+                                <td style="padding:15px;">@s.Restoran.Ad</td>
+                                <td style="padding:15px; font-weight:bold; color:var(--primary);">₺@s.ToplamTutar.ToString("N2")</td>
+                                <td style="padding:15px; text-align:right;">
+                                    <form asp-action="SiparisAl" method="post">
+                                        <input type="hidden" name="id" value="@s.SiparisId" />
+                                        <button type="submit" class="btn-outline-sm" style="border-color:var(--primary); color:var(--primary);">
+                                            🚚 Teslimatı Al
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
