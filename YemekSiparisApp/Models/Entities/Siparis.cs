@@ -27,7 +27,7 @@ namespace YemekSiparisApp.Models.Entities
         /// Beklemede | Onaylandi | Hazirlaniyor | YoldaKurye | TeslimEdildi | Iptal
         /// </summary>
         [Required, MaxLength(30)]
-        public string Durum { get; set; } = "Beklemede";
+        public string? Durum{ get; set; } = "Beklemede";
 
         /// <summary>
         /// CHECK: ToplamTutar > 0
